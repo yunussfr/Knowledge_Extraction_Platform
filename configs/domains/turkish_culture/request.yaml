@@ -15,8 +15,14 @@ research:
 schema:
   require_user_approval: true
 
+extraction:
+  chunking:
+    enabled: true
+    target_tokens: 6000
+    overlap_tokens: 300
+
 quality:
-  minimum_confidence: 0.70
+  minimum_confidence: 0.60
   low_confidence_action: review
 
 output:

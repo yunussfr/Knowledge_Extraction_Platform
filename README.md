@@ -31,12 +31,52 @@ Topic and purpose
   -> user approval
   -> Firecrawl Scrape
   -> cleaning
-  -> StructuredExtractor
+  -> token-aware chunking
+  -> per-chunk StructuredExtractor
+  -> record merge
   -> metadata, entity/relation enrichment, quality, validation, deduplication
   -> JSON or JSONL dataset
 ```
 
 The source and extraction paths are deliberately separate. Firecrawl finds and retrieves pages; Groq plans, evaluates supplied candidates, designs a draft schema, and extracts records with an evidence-support score.
+
+## Long-Document Chunking
+
+A scraped document is never sent blindly to Groq as one request. A page can be much larger than the selected model's usable request budget even when its nominal context window is large: the request also contains the system prompt, approved schema, field instructions, source metadata, expected JSON output, and a safety margin. Changing to a larger-context model alone is therefore not a permanent solution.
+
+After cleaning, `chunking_node.py` converts each source into `DocumentChunk` objects. It uses `tiktoken` BPE counts when available and a conservative Unicode-aware fallback otherwise. The configurable source-content target defaults to 6,000 tokens; it is a safe starting point, not a universal model limit. A chunk also records its source URL/title, source metadata, heading, index, total count, token count, and overlap count.
+
+The chunker prefers Markdown headings and paragraphs, accumulates those structural units up to the token budget, and splits inside a paragraph only when that paragraph alone exceeds the budget. Adjacent chunks can retain a small bounded overlap so facts at a boundary are not lost. For a 100K-token source, this produces many bounded requests rather than one failing request.
+
+```text
+Large source document
+        ↓
+Cleaning
+        ↓
+Token-aware structural chunking
+        ↓
+┌─────────┬─────────┬─────────┐
+│ Chunk 1 │ Chunk 2 │ Chunk N │
+└────┬────┴────┬────┴────┬────┘
+     ↓         ↓         ↓
+Per-chunk structured extraction
+     ↓         ↓         ↓
+Chunk extraction results
+            ↓
+           Merge
+            ↓
+Metadata, quality, and validation
+            ↓
+      Deduplication
+            ↓
+          Dataset
+```
+
+`structured_extraction_node.py` sends the approved schema, source/chunk metadata, and one chunk's content to Groq for each call. Groq still creates confidence per chunk; chunking, merging, metadata, and validation never invent a confidence value. A failed chunk is recorded with its source URL and chunk ID while successful chunks continue.
+
+`record_merge_node.py` conservatively combines chunk results only when an approved string field provides a deterministic name, title, or identifier match. Array values are unioned; a missing value is filled from evidence; conflicting scalar values are retained according to field confidence and recorded in `merge_conflicts`. Merged confidence is the minimum confidence among contributors that supplied factual fields. `contributing_chunk_ids` remain in final `_metadata`. Final exact-data deduplication also combines source/chunk provenance instead of discarding it.
+
+The existing graph keeps final deduplication after schema/confidence validation, rather than moving it in front of metadata. This preserves the project’s established quality gate: only valid final records are deduplicated. Chunk-level overlap is already handled earlier by conservative record merging.
 
 ## Human-in-the-Loop Schema Approval
 
@@ -46,7 +86,7 @@ The terminal runner writes the draft to `knowledge/review/<domain>_draft_schema.
 
 ## Groq Tasks
 
-Each task has an isolated system prompt in `src/agents/prompts/dataset_generation.py` and a structured Pydantic output model.
+Each task has an isolated system prompt in `src/agents/prompts/agents_prompts.py` and a structured Pydantic output model.
 
 - `ResearchPlanner` creates the research strategy and queries; it does not search the web.
 - `SourceEvaluator` evaluates only URLs returned by Firecrawl; it cannot create or modify a URL.
@@ -61,7 +101,7 @@ Each task has an isolated system prompt in `src/agents/prompts/dataset_generatio
 
 ## Confidence, Validation, and Metadata
 
-Confidence is not a native Groq probability. It is an evidence-support score returned by `StructuredExtractor`: 1.0 means the source clearly supports the extracted data, while lower values indicate weak or incomplete support. `validation_node.py` checks the approved schema, required fields, value types, and the configured `minimum_confidence` threshold. Low-confidence or invalid records are written to `rejected_records`; valid records become `accepted_records`. `deduplication_node.py` then removes repeated structured data before export and records duplicate rejections.
+Confidence is not a native Groq probability. It is an evidence-support score returned by `StructuredExtractor`: 1.0 means the source clearly supports the extracted data, while lower values indicate weak or incomplete support. The extractor requests a required top-level `confidence`; an explicitly returned value is preserved. If a provider omits only that summary but returns valid model-generated `field_confidence` values, the extraction boundary uses the arithmetic mean of scores for populated fields in `data`; omitted optional fields do not affect that fallback. A response with no usable confidence evidence remains invalid. This extraction fallback does not change record merging: `record_merge_node.py` still uses the minimum contributor confidence. `validation_node.py` checks the approved schema, required fields, value types, and the configured `minimum_confidence` threshold. Low-confidence or invalid records are written to `rejected_records`; valid records become `accepted_records`. `deduplication_node.py` then removes repeated structured data before export and records duplicate rejections.
 
 Metadata is separate from the dynamic dataset schema. Each accepted output record keeps provenance such as source URL, title, domain, retrieval time, provider, search query, dataset topic, schema version, and confidence under `_metadata`.
 
@@ -78,6 +118,11 @@ research:
   max_sources: 20
 schema:
   require_user_approval: true
+extraction:
+  chunking:
+    enabled: true
+    target_tokens: 6000
+    overlap_tokens: 300
 quality:
   minimum_confidence: 0.70
 output:

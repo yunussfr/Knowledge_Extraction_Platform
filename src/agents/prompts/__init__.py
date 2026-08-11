@@ -1,4 +1,4 @@
-from agents_prompts import (
+from .agents_prompts import (
     DATASET_SCHEMA_DESIGNER_SYSTEM_PROMPT,
     RESEARCH_PLANNER_SYSTEM_PROMPT,
     SOURCE_EVALUATOR_SYSTEM_PROMPT,
