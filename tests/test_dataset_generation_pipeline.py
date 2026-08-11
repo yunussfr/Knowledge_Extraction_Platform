@@ -12,7 +12,7 @@ from src.agents.nodes.validation_node import validation_node
 from src.core.config_loader import load_domain_config
 from src.core.retry import is_retryable_provider_error
 from src.core.settings import settings
-from src.schemas.models import DatasetSchemaField, ResearchPlan, SourceEvaluationResult
+from src.schemas.models import DatasetSchemaField, ExtractionResult, ResearchPlan, SourceEvaluationResult
 from src.state.state import create_initial_state
 from src.tools.firecrawl_tool import FirecrawlTool
 from src.tools.groq_client import GroqClient
@@ -101,11 +101,20 @@ def test_pending_approval_can_resume_after_process_restart(tmp_path, monkeypatch
 
 
 def test_deduplication_rejects_repeated_structured_data():
-    record = {"data": {"content": "same"}, "_metadata": {"source_url": "https://example.test/a"}}
-    result = deduplication_node({"accepted_records": [record, record], "rejected_records": [], "errors": []})
+    first = {
+        "data": {"content": "same"},
+        "_metadata": {"source_url": "https://example.test/a", "contributing_chunk_ids": ["a_001"]},
+    }
+    duplicate = {
+        "data": {"content": "same"},
+        "_metadata": {"source_url": "https://example.test/b", "contributing_chunk_ids": ["b_001"]},
+    }
+    result = deduplication_node({"accepted_records": [first, duplicate], "rejected_records": [], "errors": []})
 
     assert len(result["accepted_records"]) == 1
-    assert result["rejected_records"][0]["reasons"] == ["Duplicate extracted record."]
+    assert result["rejected_records"][0]["reasons"] == ["Duplicate extracted record; provenance merged into the retained record."]
+    assert result["accepted_records"][0]["_metadata"]["source_urls"] == ["https://example.test/a", "https://example.test/b"]
+    assert result["accepted_records"][0]["_metadata"]["contributing_chunk_ids"] == ["a_001", "b_001"]
 
 
 def test_user_reference_url_is_retained_despite_domain_filter():
@@ -168,6 +177,39 @@ def test_schema_field_accepts_camel_case_array_type():
 
     assert field.field_name == "ingredients"
     assert field.is_array is True
+
+
+def test_extraction_result_derives_missing_overall_confidence_from_field_confidence():
+    result = ExtractionResult.model_validate({
+        "data": {"dish_name": "Analı Kızlı", "recipe": "Cook and serve."},
+        "field_confidence": {"dish_name": 0.9, "recipe": 0.8},
+    })
+
+    assert result.confidence == pytest.approx(0.85)
+
+
+def test_extraction_result_ignores_omitted_optional_field_for_fallback_confidence():
+    result = ExtractionResult.model_validate({
+        "data": {"dish_name": "Analı Kızlı"},
+        "field_confidence": {"dish_name": 0.9, "recipe": 0.0},
+    })
+
+    assert result.confidence == 0.9
+
+
+def test_extraction_result_keeps_explicit_overall_confidence():
+    result = ExtractionResult.model_validate({
+        "data": {"dish_name": "Analı Kızlı", "recipe": "Cook and serve."},
+        "confidence": 0.65,
+        "field_confidence": {"dish_name": 0.9, "recipe": 0.8},
+    })
+
+    assert result.confidence == 0.65
+
+
+def test_extraction_result_still_rejects_a_response_with_no_confidence_evidence():
+    with pytest.raises(ValueError, match="confidence"):
+        ExtractionResult.model_validate({"data": {"dish_name": "Analı Kızlı"}})
 
 
 def test_user_reference_becomes_manual_override_when_evaluator_selects_nothing():

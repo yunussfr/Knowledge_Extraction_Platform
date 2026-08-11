@@ -1,5 +1,6 @@
 """Pydantic models shared by the dataset-generation pipeline."""
 
+from statistics import fmean
 from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import AliasChoices, BaseModel, Field, field_validator, model_validator
@@ -124,6 +125,21 @@ class ApprovedDatasetSchema(DraftDatasetSchema):
     approved_by: str = "user"
 
 
+class DocumentChunk(BaseModel):
+    """A token-budgeted, source-traceable portion of one cleaned document."""
+
+    chunk_id: str = Field(min_length=1)
+    source_url: str = ""
+    source_title: str = ""
+    chunk_index: int = Field(ge=0)
+    total_chunks: int = Field(ge=1)
+    heading: str = ""
+    content: str = Field(min_length=1)
+    token_count: int = Field(ge=1)
+    overlap_token_count: int = Field(ge=0, default=0)
+    source_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
 class ExtractionResult(BaseModel):
     source_url: str = Field(default="", validation_alias=AliasChoices("source_url", "sourceUrl"))
     data: Dict[str, Any]
@@ -132,3 +148,50 @@ class ExtractionResult(BaseModel):
         default_factory=dict,
         validation_alias=AliasChoices("field_confidence", "fieldConfidence", "field_confidences", "fieldConfidences"),
     )
+    source_chunk_id: str = Field(default="", validation_alias=AliasChoices("source_chunk_id", "sourceChunkId"))
+    chunk_index: int = Field(default=0, ge=0, validation_alias=AliasChoices("chunk_index", "chunkIndex"))
+    total_chunks: int = Field(default=1, ge=1, validation_alias=AliasChoices("total_chunks", "totalChunks"))
+
+    @model_validator(mode="before")
+    @classmethod
+    def derive_missing_overall_confidence(cls, value: Any) -> Any:
+        """Derive missing confidence from populated fields' model-provided evidence."""
+        if not isinstance(value, dict) or "confidence" in value:
+            return value
+        data = value.get("data")
+        if not isinstance(data, dict):
+            return value
+        field_confidence = (
+            value.get("field_confidence")
+            or value.get("fieldConfidence")
+            or value.get("field_confidences")
+            or value.get("fieldConfidences")
+        )
+        if not isinstance(field_confidence, dict) or not field_confidence:
+            return value
+        try:
+            scores = [
+                float(score)
+                for field_name, score in field_confidence.items()
+                if field_name in data and data[field_name] not in (None, "", [], {})
+            ]
+        except (TypeError, ValueError):
+            return value
+        if scores and all(0.0 <= score <= 1.0 for score in scores):
+            normalized = dict(value)
+            normalized["confidence"] = fmean(scores)
+            return normalized
+        return value
+
+
+class MergedRecord(BaseModel):
+    """A conservative merge of extraction results that identify the same record."""
+
+    data: Dict[str, Any]
+    confidence: float = Field(ge=0.0, le=1.0)
+    field_confidence: Dict[str, float] = Field(default_factory=dict)
+    source_url: str = ""
+    source_title: str = ""
+    source_metadata: Dict[str, Any] = Field(default_factory=dict)
+    contributing_chunk_ids: List[str] = Field(default_factory=list)
+    merge_conflicts: List[Dict[str, Any]] = Field(default_factory=list)

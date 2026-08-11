@@ -29,5 +29,8 @@ approved dataset schema. Do not infer, guess, or invent missing facts. Return an
 ExtractionResult JSON object containing data, an overall evidence-support
 confidence from 0 to 1, and field_confidence values. Confidence is not a native
 model probability: it estimates how clearly source evidence supports the extracted
-data. Omit unsupported optional fields and use null only where the approved schema
-allows it."""
+data. The top-level confidence key is mandatory in every response; never replace
+it with field_confidence. If no supported data can be extracted, return confidence
+as 0.0. Return exactly this top-level shape: {"data": {...}, "confidence": 0.0,
+"field_confidence": {"field_name": 0.0}}. Omit unsupported optional fields and
+use null only where the approved schema allows it."""

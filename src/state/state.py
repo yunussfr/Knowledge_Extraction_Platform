@@ -9,7 +9,7 @@ StatusType = Literal[
     "created", "planning_research", "research_plan_ready", "searching_sources",
     "sources_discovered", "evaluating_sources", "sources_selected", "designing_schema",
     "waiting_for_schema_approval", "schema_approved", "scraping_sources",
-    "processing", "extracting_data", "classifying", "enriching", "extracting_entities",
+    "processing", "chunking", "extracting_data", "merging", "classifying", "enriching", "extracting_entities",
     "extracting_relations", "quality_check", "normalizing", "validating", "deduplicating",
     "exporting", "writing_dataset", "completed", "failed", "cancelled", "acquiring",
 ]
@@ -28,6 +28,10 @@ class AgentState(TypedDict):
     draft_dataset_schema: Dict[str, Any]
     approved_dataset_schema: Dict[str, Any]
     scraped_documents: List[Dict[str, Any]]
+    clean_documents: List[Dict[str, Any]]
+    document_chunks: List[Dict[str, Any]]
+    chunk_extraction_results: List[Dict[str, Any]]
+    merged_records: List[Dict[str, Any]]
     extraction_results: List[Dict[str, Any]]
     accepted_records: List[Dict[str, Any]]
     rejected_records: List[Dict[str, Any]]
@@ -57,6 +61,10 @@ def create_initial_state(domain: str, config: Dict[str, Any]) -> AgentState:
         "draft_dataset_schema": {},
         "approved_dataset_schema": {},
         "scraped_documents": [],
+        "clean_documents": [],
+        "document_chunks": [],
+        "chunk_extraction_results": [],
+        "merged_records": [],
         "extraction_results": [],
         "accepted_records": [],
         "rejected_records": [],

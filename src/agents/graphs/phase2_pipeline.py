@@ -1,4 +1,4 @@
-"""Single LangGraph pipeline for legacy and real-source dataset generation."""
+"""Single LangGraph pipeline for Knowledge_extraction_agent."""
 
 import json
 import re
@@ -11,6 +11,7 @@ from langgraph.graph import END, StateGraph
 from src.core.logging import get_logger
 from src.agents.nodes.acquisition_node import acquisition_node
 from src.agents.nodes.classification_node import classification_node
+from src.agents.nodes.chunking_node import chunking_node
 from src.agents.nodes.dataset_schema_designer_node import dataset_schema_designer_node
 from src.agents.nodes.deduplication_node import deduplication_node
 from src.agents.nodes.entity_extraction_node import entity_extraction_node
@@ -20,6 +21,7 @@ from src.agents.nodes.normalization_node import normalization_node
 from src.agents.nodes.processing_node import processing_node
 from src.agents.nodes.quality_analysis_node import quality_analysis_node
 from src.agents.nodes.relation_extraction_node import relation_extraction_node
+from src.agents.nodes.record_merge_node import record_merge_node
 from src.agents.nodes.research_planner_node import research_planner_node
 from src.agents.nodes.source_evaluator_node import source_evaluator_node
 from src.agents.nodes.source_search_node import source_search_node
@@ -35,7 +37,7 @@ logger = get_logger(__name__)
 def _entry_node(_: AgentState) -> Dict[str, Any]:
     return {}
 
-
+#This function examines the current state and decides which node the pipeline will proceed to
 def _entry_route(state: AgentState) -> str:
     if state.get("status") in {"failed", "cancelled", "waiting_for_schema_approval"}:
         return END
@@ -51,7 +53,7 @@ def _schema_route(state: AgentState) -> str:
 def _processing_route(state: AgentState) -> str:
     if state.get("status") == "failed":
         return END
-    return "structured_extraction" if state.get("approved_dataset_schema") else "classification"
+    return "chunking" if state.get("approved_dataset_schema") else "classification"
 
 
 def _next_or_end(next_node: str):
@@ -83,7 +85,9 @@ class DatasetGenerationPipeline:
         workflow.add_node("dataset_schema_designer", dataset_schema_designer_node)
         workflow.add_node("acquisition", acquisition_node)
         workflow.add_node("processing", processing_node)
+        workflow.add_node("chunking", chunking_node)
         workflow.add_node("structured_extraction", structured_extraction_node)
+        workflow.add_node("record_merge", record_merge_node)
         workflow.add_node("deduplication", deduplication_node)
         workflow.add_node("classification", classification_node)
         workflow.add_node("metadata_enrichment", metadata_enrichment_node)
@@ -108,9 +112,11 @@ class DatasetGenerationPipeline:
         workflow.add_conditional_edges("acquisition", _next_or_end("processing"), {"processing": "processing", END: END})
         workflow.add_conditional_edges(
             "processing", _processing_route,
-            {"structured_extraction": "structured_extraction", "classification": "classification", END: END},
+            {"chunking": "chunking", "classification": "classification", END: END},
         )
-        workflow.add_conditional_edges("structured_extraction", _next_or_end("classification"), {"classification": "classification", END: END})
+        workflow.add_conditional_edges("chunking", _next_or_end("structured_extraction"), {"structured_extraction": "structured_extraction", END: END})
+        workflow.add_conditional_edges("structured_extraction", _next_or_end("record_merge"), {"record_merge": "record_merge", END: END})
+        workflow.add_conditional_edges("record_merge", _next_or_end("classification"), {"classification": "classification", END: END})
         workflow.add_conditional_edges("classification", _next_or_end("metadata_enrichment"), {"metadata_enrichment": "metadata_enrichment", END: END})
         workflow.add_conditional_edges("metadata_enrichment", _next_or_end("entity_extraction"), {"entity_extraction": "entity_extraction", END: END})
         workflow.add_conditional_edges("entity_extraction", _next_or_end("relation_extraction"), {"relation_extraction": "relation_extraction", END: END})

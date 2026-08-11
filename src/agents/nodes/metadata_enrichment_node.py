@@ -43,6 +43,23 @@ def _enrich_item(item: Dict[str, Any], extraction: Dict[str, Any] | None, topic:
     return enriched
 
 
+def _enrich_merged_record(
+    base_item: Dict[str, Any], merged: Dict[str, Any], topic: str, schema_version: str
+) -> Dict[str, Any]:
+    """Attach final provenance after compatible chunk extractions were merged."""
+    extraction = {
+        "data": merged.get("data", {}),
+        "confidence": merged.get("confidence", 0.0),
+        "field_confidence": merged.get("field_confidence", {}),
+    }
+    enriched = _enrich_item(base_item, extraction, topic, schema_version)
+    metadata = enriched["metadata"]
+    metadata["source_title"] = merged.get("source_title") or metadata.get("source_title", "")
+    metadata["contributing_chunk_ids"] = merged.get("contributing_chunk_ids", [])
+    metadata["merge_conflicts"] = merged.get("merge_conflicts", [])
+    return enriched
+
+
 def metadata_enrichment_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Phase 2: Enriches classified documents with structured metadata.
@@ -56,10 +73,26 @@ def metadata_enrichment_node(state: Dict[str, Any]) -> Dict[str, Any]:
             result.get("source_url"): result for result in state.get("extraction_results", [])
         }
         schema_version = str(state.get("approved_dataset_schema", {}).get("schema_version", "1.0"))
-        enriched_data = [
-            _enrich_item(item, extraction_by_url.get(item.get("source")), state.get("dataset_topic", ""), schema_version)
-            for item in classified_data
-        ]
+        merged_records = state.get("merged_records", [])
+        if merged_records:
+            base_by_url = {item.get("source", ""): item for item in classified_data}
+            enriched_data = []
+            for merged in merged_records:
+                source_url = merged.get("source_url", "")
+                base_item = base_by_url.get(source_url, {
+                    "source": source_url,
+                    "title": merged.get("source_title", ""),
+                    "cleaned_content": "",
+                    "metadata": merged.get("source_metadata", {}),
+                })
+                enriched_data.append(_enrich_merged_record(
+                    base_item, merged, state.get("dataset_topic", ""), schema_version
+                ))
+        else:
+            enriched_data = [
+                _enrich_item(item, extraction_by_url.get(item.get("source")), state.get("dataset_topic", ""), schema_version)
+                for item in classified_data
+            ]
 
         return {
             "enriched_data": enriched_data,
