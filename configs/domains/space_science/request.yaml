@@ -1,0 +1,24 @@
+dataset:
+  name: space_science_dataset
+  topic: Space science and astronomy
+  purpose: Evidence-backed records for RAG and knowledge-base systems.
+
+research:
+  auto_generate_queries: true
+  max_queries: 10
+  max_sources: 20
+  preferred_domains: []
+  reference_urls: []
+  constraints: ""
+  queries: []
+
+schema:
+  auto_design: true
+  require_user_approval: true
+
+quality:
+  minimum_confidence: 0.70
+  low_confidence_action: reject
+
+output:
+  format: json
