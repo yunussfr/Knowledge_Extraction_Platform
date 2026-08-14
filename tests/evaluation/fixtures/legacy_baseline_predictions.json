@@ -1,0 +1,78 @@
+{
+  "benchmark_version": "1.0",
+  "description": "Deterministic approximation of the current mock evaluator's first-N selection and the current extraction path's one-record-per-segment behavior without field evidence.",
+  "source_predictions": {
+    "selection_limit": 10,
+    "ranked_candidate_ids": [
+      "government_deep_relevant",
+      "government_shallow_relevant",
+      "government_irrelevant",
+      "independent_deep_relevant",
+      "independent_shallow",
+      "university_useful",
+      "university_irrelevant",
+      "official_documentation_useful",
+      "official_documentation_shallow",
+      "thin_blog",
+      "duplicate_independent_page",
+      "useful_non_seed_domain",
+      "academic_deep_relevant",
+      "academic_shallow_relevant",
+      "academic_irrelevant",
+      "forum_implementation_deep",
+      "social_media_opinion",
+      "dataset_attention_benchmarks",
+      "official_marketing",
+      "university_benchmark_useful",
+      "news_recent_relevant",
+      "independent_benchmark_deep",
+      "government_primary_facts",
+      "academic_duplicate"
+    ]
+  },
+  "extraction_predictions": [
+    {
+      "page_id": "single_record_page",
+      "records": [
+        {"local_record_id": "legacy-single-1", "data": {"item_name": "Solaris Engine", "description": "a compact inference runtime", "category": "runtime"}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "many_record_page",
+      "records": [
+        {"local_record_id": "legacy-many-1", "data": {"item_name": "Alpha Model", "description": "optimized for classification", "category": "model"}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "repeated_dom_cards",
+      "records": [
+        {"local_record_id": "legacy-card-1", "data": {"item_name": "Red Adapter", "description": "connects legacy inputs", "category": "adapter"}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "table_page",
+      "records": [
+        {"local_record_id": "legacy-table-1", "data": {"item_name": "Mercury Index", "description": "provides dense lookup", "category": 7}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "long_prose_page",
+      "records": [
+        {"local_record_id": "legacy-long-1", "data": {"item_name": "Atlas Retriever", "description": "a fault-tolerant semantic retrieval service", "category": "retrieval"}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "missing_optional_page",
+      "records": [
+        {"local_record_id": "legacy-optional-1", "data": {"item_name": "Orbit Parser", "description": "a Unicode-safe document parser"}, "field_evidence": {}}
+      ]
+    },
+    {
+      "page_id": "duplicate_information_page",
+      "records": [
+        {"local_record_id": "legacy-duplicate-1", "data": {"item_name": "Orion Store", "description": "a versioned feature store", "category": "storage"}, "field_evidence": {}},
+        {"local_record_id": "legacy-duplicate-2", "data": {"item_name": "Orion Store", "description": "a versioned feature store", "category": "storage"}, "field_evidence": {}}
+      ]
+    }
+  ]
+}

@@ -94,6 +94,18 @@ def test_pending_approval_can_resume_after_process_restart(tmp_path, monkeypatch
 
     restarted_pipeline = build_phase2_pipeline()
     resumed = restarted_pipeline.load_pending_review_state("coffee", "coffee_records")
+    for state_key in [
+        "research_plan",
+        "source_policy",
+        "source_registry",
+        "source_previews",
+        "source_evaluations",
+        "source_selections",
+        "source_selection_metrics",
+        "selected_sources",
+        "schema_design_input",
+    ]:
+        assert resumed[state_key] == pending[state_key]
     completed = restarted_pipeline.approve_schema(resumed, json.loads(review_path.read_text(encoding="utf-8")))
 
     assert completed["status"] == "completed"
@@ -117,7 +129,7 @@ def test_deduplication_rejects_repeated_structured_data():
     assert result["accepted_records"][0]["_metadata"]["contributing_chunk_ids"] == ["a_001", "b_001"]
 
 
-def test_user_reference_url_is_retained_despite_domain_filter():
+def test_preferred_domain_is_soft_and_user_reference_is_retained():
     result = source_search_node({
         "config": {
             "research": {
@@ -130,8 +142,12 @@ def test_user_reference_url_is_retained_despite_domain_filter():
         "errors": [],
     })
 
-    assert [source["url"] for source in result["candidate_sources"]] == ["https://manual.example/source"]
+    assert [source["url"] for source in result["candidate_sources"]] == [
+        "https://manual.example/source",
+        "https://unwanted.example/source",
+    ]
     assert result["candidate_sources"][0]["user_supplied_reference"] is True
+    assert result["candidate_sources"][1]["preferred_domain_match"] is False
 
 
 def test_quality_report_includes_structured_extraction_confidence():
@@ -227,7 +243,9 @@ def test_domain_config_loads_request_and_source_information():
 
     assert config["dataset"]["name"]
     assert "research" in config
-    assert isinstance(config["sources"], list)
+    assert isinstance(config["sources"], dict)
+    assert config["sources"]["seed_urls"] == ["https://www.malatya.gov.tr/yoresel-yemekler"]
+    assert isinstance(config["mock_sources"], list)
 
 
 def test_provider_clients_fail_fast_when_api_keys_are_missing():

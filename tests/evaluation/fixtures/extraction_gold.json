@@ -1,0 +1,144 @@
+{
+  "benchmark_version": "1.0",
+  "schema": {
+    "identity_field": "item_name",
+    "fields": {
+      "item_name": {"type": "string", "required": true},
+      "description": {"type": "string", "required": true},
+      "category": {"type": "string", "required": false}
+    }
+  },
+  "pages": [
+    {
+      "page_id": "zero_record_page",
+      "source_url": "https://fixtures.example/navigation",
+      "scenarios": ["zero-record-page"],
+      "content": "Home | About | Contact | Privacy. This navigation page contains no catalog item descriptions.",
+      "expected_records": []
+    },
+    {
+      "page_id": "single_record_page",
+      "source_url": "https://fixtures.example/catalog/solaris",
+      "scenarios": ["single-record-page"],
+      "content": "Solaris Engine is a compact inference runtime. Category: runtime.",
+      "expected_records": [
+        {
+          "record_id": "solaris",
+          "data": {
+            "item_name": "Solaris Engine",
+            "description": "a compact inference runtime",
+            "category": "runtime"
+          },
+          "field_evidence": {
+            "item_name": ["Solaris Engine"],
+            "description": ["a compact inference runtime"],
+            "category": ["Category: runtime"]
+          }
+        }
+      ]
+    },
+    {
+      "page_id": "many_record_page",
+      "source_url": "https://fixtures.example/catalog/models",
+      "scenarios": ["many-record-page"],
+      "content": "Alpha Model is optimized for classification. Category: model. Beta Model is designed for summarization. Category: model. Gamma Model supports multilingual retrieval. Category: model.",
+      "expected_records": [
+        {
+          "record_id": "alpha",
+          "data": {"item_name": "Alpha Model", "description": "optimized for classification", "category": "model"},
+          "field_evidence": {"item_name": ["Alpha Model"], "description": ["optimized for classification"], "category": ["Category: model"]}
+        },
+        {
+          "record_id": "beta",
+          "data": {"item_name": "Beta Model", "description": "designed for summarization", "category": "model"},
+          "field_evidence": {"item_name": ["Beta Model"], "description": ["designed for summarization"], "category": ["Category: model"]}
+        },
+        {
+          "record_id": "gamma",
+          "data": {"item_name": "Gamma Model", "description": "supports multilingual retrieval", "category": "model"},
+          "field_evidence": {"item_name": ["Gamma Model"], "description": ["supports multilingual retrieval"], "category": ["Category: model"]}
+        }
+      ]
+    },
+    {
+      "page_id": "repeated_dom_cards",
+      "source_url": "https://fixtures.example/catalog/cards",
+      "scenarios": ["repeated-dom-cards", "many-record-page"],
+      "content": "<section class=\"card\"><h2>Red Adapter</h2><p>connects legacy inputs</p><span>Category: adapter</span></section><section class=\"card\"><h2>Blue Adapter</h2><p>connects streaming inputs</p><span>Category: adapter</span></section><section class=\"card\"><h2>Green Adapter</h2><p>connects batch inputs</p><span>Category: adapter</span></section>",
+      "expected_records": [
+        {
+          "record_id": "red-adapter",
+          "data": {"item_name": "Red Adapter", "description": "connects legacy inputs", "category": "adapter"},
+          "field_evidence": {"item_name": ["Red Adapter"], "description": ["connects legacy inputs"], "category": ["Category: adapter"]}
+        },
+        {
+          "record_id": "blue-adapter",
+          "data": {"item_name": "Blue Adapter", "description": "connects streaming inputs", "category": "adapter"},
+          "field_evidence": {"item_name": ["Blue Adapter"], "description": ["connects streaming inputs"], "category": ["Category: adapter"]}
+        },
+        {
+          "record_id": "green-adapter",
+          "data": {"item_name": "Green Adapter", "description": "connects batch inputs", "category": "adapter"},
+          "field_evidence": {"item_name": ["Green Adapter"], "description": ["connects batch inputs"], "category": ["Category: adapter"]}
+        }
+      ]
+    },
+    {
+      "page_id": "table_page",
+      "source_url": "https://fixtures.example/catalog/table",
+      "scenarios": ["table"],
+      "content": "| Item | Description | Category |\n|---|---|---|\n| Mercury Index | provides dense lookup | index |\n| Venus Index | provides sparse lookup | index |",
+      "expected_records": [
+        {
+          "record_id": "mercury-index",
+          "data": {"item_name": "Mercury Index", "description": "provides dense lookup", "category": "index"},
+          "field_evidence": {"item_name": ["Mercury Index"], "description": ["provides dense lookup"], "category": ["index"]}
+        },
+        {
+          "record_id": "venus-index",
+          "data": {"item_name": "Venus Index", "description": "provides sparse lookup", "category": "index"},
+          "field_evidence": {"item_name": ["Venus Index"], "description": ["provides sparse lookup"], "category": ["index"]}
+        }
+      ]
+    },
+    {
+      "page_id": "long_prose_page",
+      "source_url": "https://fixtures.example/catalog/atlas",
+      "scenarios": ["long-prose"],
+      "content": "This engineering note describes the history of retrieval services, their operational constraints, deployment patterns, observability needs, cache design, failure isolation, and capacity planning. Teams first evaluate request volume and latency budgets. They then compare index layouts, memory pressure, update frequency, and query fanout. The document explains how background compaction affects tail latency and why load tests must use representative distributions. It discusses monitoring, rollback, staged releases, incident response, and recovery drills. It also explains that benchmark results depend on hardware, concurrency, payload size, and cache temperature. Readers are warned not to compare isolated headline numbers without methodology. Several paragraphs describe validation data, reproducible environments, deterministic seeds, and versioned configuration. Another section covers privacy boundaries, retention limits, access controls, and audit records. The note continues with practical advice about timeouts, bounded retries, circuit breakers, and per-source failure isolation. It recommends measuring accepted outputs rather than raw throughput. Atlas Retriever is a fault-tolerant semantic retrieval service. Category: retrieval. The final sections revisit deployment, testing, monitoring, capacity, privacy, reproducibility, and failure recovery so that the page remains representative of a long prose source rather than a compact product card.",
+      "expected_records": [
+        {
+          "record_id": "atlas-retriever",
+          "data": {"item_name": "Atlas Retriever", "description": "a fault-tolerant semantic retrieval service", "category": "retrieval"},
+          "field_evidence": {"item_name": ["Atlas Retriever"], "description": ["a fault-tolerant semantic retrieval service"], "category": ["Category: retrieval"]}
+        }
+      ]
+    },
+    {
+      "page_id": "missing_optional_page",
+      "source_url": "https://fixtures.example/catalog/orbit",
+      "scenarios": ["missing-optional-fields"],
+      "content": "Orbit Parser is a Unicode-safe document parser.",
+      "expected_records": [
+        {
+          "record_id": "orbit-parser",
+          "data": {"item_name": "Orbit Parser", "description": "a Unicode-safe document parser"},
+          "field_evidence": {"item_name": ["Orbit Parser"], "description": ["a Unicode-safe document parser"]}
+        }
+      ]
+    },
+    {
+      "page_id": "duplicate_information_page",
+      "source_url": "https://fixtures.example/catalog/orion",
+      "scenarios": ["duplicate-information"],
+      "content": "Orion Store is a versioned feature store. Category: storage. Product summary: Orion Store is a versioned feature store. Category: storage.",
+      "expected_records": [
+        {
+          "record_id": "orion-store",
+          "data": {"item_name": "Orion Store", "description": "a versioned feature store", "category": "storage"},
+          "field_evidence": {"item_name": ["Orion Store"], "description": ["a versioned feature store"], "category": ["Category: storage"]}
+        }
+      ]
+    }
+  ]
+}

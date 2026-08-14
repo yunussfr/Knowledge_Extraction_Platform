@@ -2,15 +2,50 @@ dataset:
   name: my_dataset
   topic: Malatya regional dishes
   purpose: A structured dataset for a food-culture RAG system.
+  profile: structured
 
 research:
   max_queries: 10
   max_sources: 20
+  constraints: Only include traditional dishes with source evidence.
+  queries: []
+
+sources:
+  seed_urls:
+    - https://www.malatya.gov.tr/yoresel-yemekler
   preferred_domains:
     - kulturportali.gov.tr
-  reference_urls:
-    - https://www.malatya.gov.tr/yoresel-yemekler
-  constraints: Only include traditional dishes with source evidence.
+
+  # Optional hard controls. Omit them to apply no allowlist/blocklist.
+  # allowed_domains:
+  #   - kulturportali.gov.tr
+  # blocked_domains:
+  #   - spam.example
+
+  source_policy:
+    desired_content:
+      - traditional_dish_evidence
+    importance:
+      authority: medium
+      technical_depth: low
+      information_density: high
+      recency: low
+      extractability: high
+
+    # Optional source-type controls. Omitted means unrestricted.
+    # preferred_source_types:
+    #   - government
+    # allowed_source_types:
+    #   - government
+    # blocked_source_types:
+    #   - social_media
+
+site_exploration:
+  enabled: false
+  max_seed_domains: 5
+  max_depth: 2
+  max_pages_per_domain: 25
+  same_domain_only: true
 
 schema:
   require_user_approval: true

@@ -88,7 +88,7 @@ def live_provider(monkeypatch):
 def test_structured_extractor_calls_groq_once_per_chunk(live_provider):
     calls = []
 
-    def complete_json(_, system_prompt, user_prompt, output_model):
+    def complete_json(_, system_prompt, user_prompt, output_model, **kwargs):
         calls.append((system_prompt, user_prompt))
         return output_model(data={"dish_name": "Analı Kızlı"}, confidence=0.91)
 
@@ -108,7 +108,7 @@ def test_structured_extractor_calls_groq_once_per_chunk(live_provider):
 
 
 def test_failed_chunk_does_not_discard_successful_chunk(live_provider):
-    def complete_json(_, system_prompt, user_prompt, output_model):
+    def complete_json(_, system_prompt, user_prompt, output_model, **kwargs):
         if "source_001_chunk_001" in user_prompt:
             raise RuntimeError("Simulated provider timeout")
         return output_model(data={"dish_name": "Analı Kızlı"}, confidence=0.88)
@@ -127,7 +127,7 @@ def test_failed_chunk_does_not_discard_successful_chunk(live_provider):
 
 
 def test_all_failed_chunks_produce_a_traceable_pipeline_failure(live_provider):
-    def complete_json(_, system_prompt, user_prompt, output_model):
+    def complete_json(_, system_prompt, user_prompt, output_model, **kwargs):
         raise RuntimeError("Simulated provider failure")
 
     live_provider.setattr(GroqClient, "complete_json", complete_json)

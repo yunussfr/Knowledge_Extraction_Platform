@@ -2,15 +2,26 @@ dataset:
   name: space_science_dataset
   topic: Space science and astronomy
   purpose: Evidence-backed records for RAG and knowledge-base systems.
+  profile: structured
 
 research:
   auto_generate_queries: true
   max_queries: 10
   max_sources: 20
-  preferred_domains: []
-  reference_urls: []
   constraints: ""
   queries: []
+
+sources:
+  seed_urls: []
+  preferred_domains: []
+  source_policy: {}
+
+site_exploration:
+  enabled: false
+  max_seed_domains: 5
+  max_depth: 2
+  max_pages_per_domain: 25
+  same_domain_only: true
 
 schema:
   auto_design: true

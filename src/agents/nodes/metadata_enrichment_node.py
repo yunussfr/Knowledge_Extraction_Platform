@@ -22,6 +22,8 @@ def _build_enriched_metadata(item: Dict[str, Any], extraction: Dict[str, Any] | 
         "word_count": len(item.get("cleaned_content", "").split()),
         "confidence_score": (extraction or {}).get("confidence", existing_meta.get("confidence_score", 0.0)),
         "validation_method": existing_meta.get("validation_method", "rule_based"),
+        "content_hash": existing_meta.get("content_hash", ""),
+        "processed_content_hash": existing_meta.get("processed_content_hash", ""),
     }
 
 
@@ -55,7 +57,19 @@ def _enrich_merged_record(
     enriched = _enrich_item(base_item, extraction, topic, schema_version)
     metadata = enriched["metadata"]
     metadata["source_title"] = merged.get("source_title") or metadata.get("source_title", "")
+    metadata["source_urls"] = merged.get("source_urls", [])
+    metadata["source_titles"] = merged.get("source_titles", {})
+    metadata["source_content_hashes"] = merged.get("source_content_hashes", {})
     metadata["contributing_chunk_ids"] = merged.get("contributing_chunk_ids", [])
+    metadata["contributing_record_ids"] = merged.get("contributing_record_ids", [])
+    metadata["contributors"] = merged.get("contributors", [])
+    metadata["field_evidence"] = merged.get("field_evidence", {})
+    metadata["evidence_quality_score"] = merged.get("evidence_quality_score", 0.0)
+    metadata["evidence_support_statuses"] = merged.get("evidence_support_statuses", [])
+    metadata["quality_assessments"] = merged.get("quality_assessments", [])
+    metadata["resolution_method"] = merged.get("resolution_method", "local_record")
+    metadata["resolution_key"] = merged.get("resolution_key", "")
+    metadata["extraction_methods"] = merged.get("extraction_methods", [])
     metadata["merge_conflicts"] = merged.get("merge_conflicts", [])
     return enriched
 
@@ -88,6 +102,10 @@ def metadata_enrichment_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 enriched_data.append(_enrich_merged_record(
                     base_item, merged, state.get("dataset_topic", ""), schema_version
                 ))
+        elif state.get("approved_dataset_schema"):
+            # A valid ExtractionBatch may intentionally contain zero records.
+            # Do not turn the source document itself into a synthetic record.
+            enriched_data = []
         else:
             enriched_data = [
                 _enrich_item(item, extraction_by_url.get(item.get("source")), state.get("dataset_topic", ""), schema_version)

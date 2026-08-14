@@ -1,0 +1,305 @@
+{
+  "benchmark_version": "1.0",
+  "topic": "Transformer architectures and attention mechanisms",
+  "purpose": "Build an evidence-backed technical RAG dataset for AI engineers and students.",
+  "policies": {
+    "policy_a": {
+      "preferred_source_types": [],
+      "allowed_source_types": null,
+      "blocked_source_types": null,
+      "desired_content": ["technical_explanation", "implementation_details"],
+      "avoided_content": [],
+      "minimum_content_depth": null,
+      "importance": {
+        "authority": "low",
+        "technical_depth": "high",
+        "information_density": "high",
+        "recency": "medium",
+        "extractability": "medium"
+      }
+    },
+    "policy_b": {
+      "preferred_source_types": [],
+      "allowed_source_types": ["academic", "government", "university"],
+      "blocked_source_types": null,
+      "desired_content": [],
+      "avoided_content": [],
+      "minimum_content_depth": null,
+      "importance": {
+        "authority": "high",
+        "technical_depth": "medium",
+        "information_density": "medium",
+        "recency": "medium",
+        "extractability": "medium"
+      }
+    }
+  },
+  "candidates": [
+    {
+      "id": "government_deep_relevant",
+      "url": "https://gov.example/transformer-engineering",
+      "source_type": "government",
+      "cases": ["high-authority", "deep", "relevant"],
+      "preview": "A detailed engineering reference explaining attention equations, architecture tradeoffs, and implementation constraints.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "government_shallow_relevant",
+      "url": "https://gov.example/transformer-summary",
+      "source_type": "government",
+      "cases": ["high-authority", "shallow", "relevant", "official-shallow"],
+      "preview": "A short official overview defining transformers without equations, implementation details, or benchmarks.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "government_irrelevant",
+      "url": "https://gov.example/power-transformers",
+      "source_type": "government",
+      "cases": ["high-authority", "irrelevant"],
+      "preview": "An authoritative electrical-grid page about high-voltage power transformers.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "independent_deep_relevant",
+      "url": "https://independent.example/attention-from-scratch",
+      "source_type": "independent_technical",
+      "cases": ["independent", "deep", "relevant"],
+      "preview": "A rigorous derivation with annotated implementation, tensor shapes, tests, and benchmark discussion.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "independent_shallow",
+      "url": "https://independent.example/transformers-in-five-minutes",
+      "source_type": "independent_technical",
+      "cases": ["independent", "shallow", "relevant"],
+      "preview": "A brief conceptual summary without code, mathematics, citations, or measurements.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "university_useful",
+      "url": "https://university.example/courses/attention-notes",
+      "source_type": "university",
+      "cases": ["university", "useful", "deep", "relevant"],
+      "preview": "Course notes with derivations, diagrams, exercises, and implementation pseudocode.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "university_irrelevant",
+      "url": "https://university.example/facilities/power-transformer",
+      "source_type": "university",
+      "cases": ["university", "irrelevant"],
+      "preview": "A campus facilities page describing an electrical transformer replacement.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "official_documentation_useful",
+      "url": "https://official.example/framework/transformer-api",
+      "source_type": "official_documentation",
+      "cases": ["official", "useful", "implementation-details"],
+      "preview": "Official API documentation with exact parameters, tensor contracts, examples, and failure modes.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "official_documentation_shallow",
+      "url": "https://official.example/framework/transformer-landing",
+      "source_type": "official_documentation",
+      "cases": ["official", "shallow", "relevant"],
+      "preview": "A product landing page with a two-sentence feature summary and no technical detail.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "thin_blog",
+      "url": "https://blog.example/what-is-attention",
+      "source_type": "blog",
+      "cases": ["thin-page", "shallow"],
+      "preview": "Attention is all you need. Transformers are powerful and popular.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "duplicate_independent_page",
+      "url": "https://mirror.example/attention-from-scratch",
+      "source_type": "independent_technical",
+      "cases": ["duplicate-page", "deep", "relevant"],
+      "duplicate_of": "independent_deep_relevant",
+      "preview": "A mirrored copy of the rigorous derivation, annotated implementation, tests, and benchmark discussion.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "useful_non_seed_domain",
+      "url": "https://new-domain.example/transformer-debugging",
+      "source_type": "independent_technical",
+      "cases": ["useful-non-seed-domain", "deep", "relevant"],
+      "preview": "A non-seed source with implementation diagnostics, attention-mask examples, and reproducible tests.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "academic_deep_relevant",
+      "url": "https://papers.example/attention-analysis",
+      "source_type": "academic",
+      "cases": ["academic", "deep", "relevant", "allowed-source-type"],
+      "preview": "A peer-reviewed analysis containing equations, ablations, experimental methodology, and limitations.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "academic_shallow_relevant",
+      "url": "https://papers.example/transformer-poster",
+      "source_type": "academic",
+      "cases": ["academic", "shallow", "relevant", "allowed-source-type"],
+      "preview": "A short academic poster abstract with relevant findings but few implementation details.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "academic_irrelevant",
+      "url": "https://papers.example/electrical-transformers",
+      "source_type": "academic",
+      "cases": ["academic", "irrelevant", "allowed-source-type"],
+      "preview": "A peer-reviewed paper about electrical transformer insulation.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "forum_implementation_deep",
+      "url": "https://forum.example/attention-kernel-debugging",
+      "source_type": "forum",
+      "cases": ["independent", "deep", "implementation-details", "blocked-by-policy-b"],
+      "preview": "A technically detailed debugging thread with executable kernels, traces, and verified corrections.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "social_media_opinion",
+      "url": "https://social.example/post/transformers",
+      "source_type": "social_media",
+      "cases": ["opinion", "shallow", "blocked-by-policy-b"],
+      "preview": "An unsupported opinion claiming that every transformer architecture is identical.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "dataset_attention_benchmarks",
+      "url": "https://datasets.example/attention-benchmarks",
+      "source_type": "dataset",
+      "cases": ["dataset", "statistics", "relevant", "blocked-by-policy-b"],
+      "preview": "A structured benchmark dataset with model configurations, measured latency, memory, and accuracy.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "official_marketing",
+      "url": "https://vendor.example/ai-transformer-product",
+      "source_type": "official_documentation",
+      "cases": ["official", "marketing", "shallow", "blocked-by-policy-b"],
+      "preview": "A vendor page with performance claims but no method, evidence, implementation, or benchmark table.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "university_benchmark_useful",
+      "url": "https://university.example/labs/attention-benchmark",
+      "source_type": "university",
+      "cases": ["university", "benchmark", "deep", "relevant"],
+      "preview": "A laboratory benchmark with reproducible code, hardware details, raw measurements, and limitations.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "news_recent_relevant",
+      "url": "https://news.example/new-attention-model",
+      "source_type": "news",
+      "cases": ["recent", "relevant", "shallow", "blocked-by-policy-b"],
+      "preview": "A timely announcement that summarizes a new architecture without sufficient technical evidence.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "independent_benchmark_deep",
+      "url": "https://engineering.example/attention-kernel-benchmarks",
+      "source_type": "independent_technical",
+      "cases": ["independent", "benchmark", "deep", "relevant", "blocked-by-policy-b"],
+      "preview": "An engineering report with open benchmark scripts, raw results, profiling traces, and caveats.",
+      "expected": {
+        "policy_a": {"decision": "select", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": true}
+      }
+    },
+    {
+      "id": "government_primary_facts",
+      "url": "https://gov.example/ai-model-registry",
+      "source_type": "government",
+      "cases": ["government", "primary-facts", "relevant"],
+      "preview": "A primary registry with verified model release dates, identifiers, and declared context sizes.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "select", "hard_policy_rejected": false}
+      }
+    },
+    {
+      "id": "academic_duplicate",
+      "url": "https://archive.example/attention-analysis-copy",
+      "source_type": "academic",
+      "cases": ["academic", "duplicate-page", "relevant", "allowed-source-type"],
+      "duplicate_of": "academic_deep_relevant",
+      "preview": "An archived duplicate of the peer-reviewed attention analysis.",
+      "expected": {
+        "policy_a": {"decision": "reject", "hard_policy_rejected": false},
+        "policy_b": {"decision": "reject", "hard_policy_rejected": false}
+      }
+    }
+  ]
+}

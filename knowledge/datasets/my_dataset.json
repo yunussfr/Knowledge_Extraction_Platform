@@ -1,0 +1,252 @@
+[
+  {
+    "data": {
+      "dish_name": "Yüksük Çorbası",
+      "dish_description": "A traditional Malatya dish made with parça et, salça, tereyağı, and hazırlanmış mantı.",
+      "ingredients": [
+        "parça et",
+        "salça",
+        "tereyağı",
+        "mantı",
+        "nohut"
+      ],
+      "dessert_specialty": false,
+      "regional_ingredients": [
+        "parça et",
+        "salça",
+        "tereyağı",
+        "mantı",
+        "nohut"
+      ]
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.580626",
+      "enriched_at": "2026-08-11T14:01:34.580626",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_001"
+      ],
+      "merge_conflicts": []
+    }
+  },
+  {
+    "data": {
+      "dish_name": "Patlıcanlı Et Tavası",
+      "dish_description": "A traditional Malatya dish made with eggplant, meat, and spices.",
+      "ingredients": [
+        "1 kg orta yağlı kuşbaşı et",
+        "1,5 kg kemer patlıcan",
+        "3-4 tane yeşilbiber",
+        "2 baş kuru soğan",
+        "4-5 tane domates",
+        "3 yemek kaşığı tereyağı",
+        "1 su bardağı sıvı yağ",
+        "tuz, karabiber",
+        "kırmızı pul biber"
+      ],
+      "dessert_specialty": false
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.582135",
+      "enriched_at": "2026-08-11T14:01:34.582135",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_002"
+      ],
+      "merge_conflicts": []
+    }
+  },
+  {
+    "data": {
+      "dish_name": "Kömbe",
+      "dish_description": "Kömbe, Malatya yöresine ait bir yemektir. Yağ ve halka şeklinde doğranmış soğan ilave edilerek kızartılır, sulandırılmış salçayla da bir iki kez karıştırıldıktan sonra üzerine bol miktarda su ilave edilir, pişirmeye yakın tuz atılır.",
+      "ingredients": [
+        "1/2 ekmek mayası veya 1/2 kibrit kutusu kadar pak maya",
+        "1/2 kg. kuşbaşı et",
+        "3-4 yemek kaşığı tereyağı",
+        "Tuz - susam -1-1,5 kg. un",
+        "un",
+        "yaş maya",
+        "sıvı yağ",
+        "tuz",
+        "ılık su",
+        "peynir",
+        "haşlanmış patates",
+        "maydanoz",
+        "karabiber",
+        "pul biber",
+        "reyhan"
+      ],
+      "cooking_technique": "Pişirmeye yakın tuz atılır. Pişen ete ayıklanmış, yıkanmış pirinç ilâve edilir. Pirinçler uzayıncaya kadar pişirilir.",
+      "dessert_specialty": false,
+      "regional_ingredients": [
+        "kuşbaşı et",
+        "tereyağı",
+        "tuz",
+        "susam",
+        "un",
+        "Malatya peyniri"
+      ]
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.583144",
+      "enriched_at": "2026-08-11T14:01:34.583144",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_003",
+        "source_001_chunk_006"
+      ],
+      "merge_conflicts": [
+        {
+          "field_name": "dish_description",
+          "kept": "existing",
+          "existing_confidence": 0.9,
+          "incoming_confidence": 0.7,
+          "source_chunk_id": "source_001_chunk_006"
+        }
+      ]
+    }
+  },
+  {
+    "data": {
+      "dish_name": "Etli Dolma Köfte",
+      "dish_description": "A traditional Malatya dish made with meat and bulgur, served with a variety of ingredients such as onions, parsley, and spices.",
+      "ingredients": [
+        "yağsız kıyma",
+        "kuru soğan",
+        "maydanoz",
+        "tuz",
+        "karabiber",
+        "orta bulgur"
+      ],
+      "dessert_specialty": false
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.584146",
+      "enriched_at": "2026-08-11T14:01:34.584146",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_004"
+      ],
+      "merge_conflicts": []
+    }
+  },
+  {
+    "data": {
+      "dish_name": "Pat Köfte",
+      "dish_description": "A traditional Malatya dish made with meatballs and vegetables.",
+      "ingredients": [
+        "kuru soğan",
+        "asma yaprağı",
+        "baş bulgur",
+        "kıyma",
+        "karışık baharat",
+        "tuz-karabiber",
+        "limon veya erik ekşisi"
+      ],
+      "dessert_specialty": false
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.585145",
+      "enriched_at": "2026-08-11T14:01:34.585145",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_005"
+      ],
+      "merge_conflicts": []
+    }
+  },
+  {
+    "data": {
+      "dish_name": "Un Helvası (Arapgir Usulü)",
+      "dish_description": "Un helvası yapılan bir tatlı",
+      "ingredients": [
+        "2 su bardağı un",
+        "125 gr. margarin veya tereyağı",
+        "1 su bardağı pudra şeker"
+      ],
+      "dessert_specialty": true
+    },
+    "_metadata": {
+      "source_url": "https://www.malatya.gov.tr/yoresel-yemekler",
+      "source_type": "text",
+      "source_title": "T.C. Malatya Valiliği - Yöresel Yemekler",
+      "source_domain": "www.malatya.gov.tr",
+      "source_provider": "firecrawl",
+      "search_query": "user reference",
+      "dataset_topic": "Malatya regional dishes",
+      "extracted_at": "2026-08-11T14:01:34.587143",
+      "enriched_at": "2026-08-11T14:01:34.587143",
+      "schema_version": "1",
+      "category": "general",
+      "language": "tr",
+      "word_count": 10776,
+      "confidence_score": 0.8,
+      "validation_method": "schema_and_confidence",
+      "contributing_chunk_ids": [
+        "source_001_chunk_007"
+      ],
+      "merge_conflicts": []
+    }
+  }
+]

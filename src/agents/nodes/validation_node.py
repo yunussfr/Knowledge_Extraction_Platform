@@ -49,6 +49,7 @@ def validation_node(state: AgentState) -> Dict[str, Any]:
         accepted_records = []
         rejected_records = list(state.get("rejected_records", []))
         report_details = []
+        evidence_quality_gate_applied = bool(state.get("quality_gate_metrics"))
 
         for item in enriched_data:
             validated_item = item.copy()
@@ -59,7 +60,7 @@ def validation_node(state: AgentState) -> Dict[str, Any]:
                 if not item.get("cleaned_content", "").strip():
                     record_errors.append("Source content is empty.")
                 record_errors.extend(_validate_extracted_data(item.get("extracted_data", {}), schema))
-                if confidence < threshold:
+                if not evidence_quality_gate_applied and confidence < threshold:
                     record_errors.append(f"Confidence {confidence:.2f} is below the minimum {threshold:.2f}.")
                     low_confidence = True
             if record_errors:
@@ -73,7 +74,11 @@ def validation_node(state: AgentState) -> Dict[str, Any]:
             validated_item["validation_status"] = "validated"
             metadata = validated_item.setdefault("metadata", {})
             if schema:
-                metadata["validation_method"] = "schema_and_confidence"
+                metadata["validation_method"] = (
+                    "evidence_quality_gate_and_schema"
+                    if evidence_quality_gate_applied
+                    else "schema_and_confidence"
+                )
             else:
                 # Preserve the legacy mock pipeline contract; real-source confidence
                 # is always produced by structured_extraction_node above.

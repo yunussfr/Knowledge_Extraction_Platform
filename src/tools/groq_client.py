@@ -2,7 +2,7 @@
 
 import json
 from time import sleep
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from pydantic import BaseModel
 
@@ -19,6 +19,8 @@ class GroqClient:
         system_prompt: str,
         user_prompt: str,
         output_model: type[OutputModel],
+        *,
+        response_format: dict[str, Any] | None = None,
     ) -> OutputModel:
         if not settings.groq_api_key:
             raise RuntimeError("GROQ_API_KEY is required when DATA_SOURCE_PROVIDER is firecrawl")
@@ -39,7 +41,7 @@ class GroqClient:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    response_format={"type": "json_object"},
+                    response_format=response_format or {"type": "json_object"},
                 )
                 content = response.choices[0].message.content or "{}"
                 return output_model.model_validate(json.loads(content))

@@ -15,15 +15,22 @@ from src.agents.nodes.chunking_node import chunking_node
 from src.agents.nodes.dataset_schema_designer_node import dataset_schema_designer_node
 from src.agents.nodes.deduplication_node import deduplication_node
 from src.agents.nodes.entity_extraction_node import entity_extraction_node
+from src.agents.nodes.evidence_validation_node import evidence_validation_node
+from src.agents.nodes.extraction_router_node import extraction_router_node
+from src.agents.nodes.field_evidence_node import field_evidence_node
 from src.agents.nodes.export_node import export_node
 from src.agents.nodes.metadata_enrichment_node import metadata_enrichment_node
 from src.agents.nodes.normalization_node import normalization_node
 from src.agents.nodes.processing_node import processing_node
+from src.agents.nodes.quality_gate_node import quality_gate_node
 from src.agents.nodes.quality_analysis_node import quality_analysis_node
 from src.agents.nodes.relation_extraction_node import relation_extraction_node
-from src.agents.nodes.record_merge_node import record_merge_node
+from src.agents.nodes.record_resolution_node import record_resolution_node
 from src.agents.nodes.research_planner_node import research_planner_node
 from src.agents.nodes.source_evaluator_node import source_evaluator_node
+from src.agents.nodes.source_preview_node import source_preview_node
+from src.agents.nodes.site_exploration_node import site_exploration_node
+from src.agents.nodes.source_selector_node import source_selector_node
 from src.agents.nodes.source_search_node import source_search_node
 from src.agents.nodes.structured_extraction_node import structured_extraction_node
 from src.agents.nodes.validation_node import validation_node
@@ -81,13 +88,20 @@ class DatasetGenerationPipeline:
         workflow.add_node("entry", _entry_node)
         workflow.add_node("research_planner", research_planner_node)
         workflow.add_node("source_search", source_search_node)
+        workflow.add_node("source_preview", source_preview_node)
         workflow.add_node("source_evaluator", source_evaluator_node)
+        workflow.add_node("site_exploration", site_exploration_node)
+        workflow.add_node("source_selector", source_selector_node)
         workflow.add_node("dataset_schema_designer", dataset_schema_designer_node)
         workflow.add_node("acquisition", acquisition_node)
         workflow.add_node("processing", processing_node)
         workflow.add_node("chunking", chunking_node)
+        workflow.add_node("extraction_router", extraction_router_node)
         workflow.add_node("structured_extraction", structured_extraction_node)
-        workflow.add_node("record_merge", record_merge_node)
+        workflow.add_node("field_evidence", field_evidence_node)
+        workflow.add_node("evidence_validation", evidence_validation_node)
+        workflow.add_node("quality_gate", quality_gate_node)
+        workflow.add_node("record_resolution", record_resolution_node)
         workflow.add_node("deduplication", deduplication_node)
         workflow.add_node("classification", classification_node)
         workflow.add_node("metadata_enrichment", metadata_enrichment_node)
@@ -104,8 +118,11 @@ class DatasetGenerationPipeline:
             {"research_planner": "research_planner", "acquisition": "acquisition", END: END},
         )
         workflow.add_conditional_edges("research_planner", _next_or_end("source_search"), {"source_search": "source_search", END: END})
-        workflow.add_conditional_edges("source_search", _next_or_end("source_evaluator"), {"source_evaluator": "source_evaluator", END: END})
-        workflow.add_conditional_edges("source_evaluator", _next_or_end("dataset_schema_designer"), {"dataset_schema_designer": "dataset_schema_designer", END: END})
+        workflow.add_conditional_edges("source_search", _next_or_end("source_preview"), {"source_preview": "source_preview", END: END})
+        workflow.add_conditional_edges("source_preview", _next_or_end("source_evaluator"), {"source_evaluator": "source_evaluator", END: END})
+        workflow.add_conditional_edges("source_evaluator", _next_or_end("site_exploration"), {"site_exploration": "site_exploration", END: END})
+        workflow.add_conditional_edges("site_exploration", _next_or_end("source_selector"), {"source_selector": "source_selector", END: END})
+        workflow.add_conditional_edges("source_selector", _next_or_end("dataset_schema_designer"), {"dataset_schema_designer": "dataset_schema_designer", END: END})
         workflow.add_conditional_edges(
             "dataset_schema_designer", _schema_route, {"acquisition": "acquisition", END: END},
         )
@@ -114,9 +131,13 @@ class DatasetGenerationPipeline:
             "processing", _processing_route,
             {"chunking": "chunking", "classification": "classification", END: END},
         )
-        workflow.add_conditional_edges("chunking", _next_or_end("structured_extraction"), {"structured_extraction": "structured_extraction", END: END})
-        workflow.add_conditional_edges("structured_extraction", _next_or_end("record_merge"), {"record_merge": "record_merge", END: END})
-        workflow.add_conditional_edges("record_merge", _next_or_end("classification"), {"classification": "classification", END: END})
+        workflow.add_conditional_edges("chunking", _next_or_end("extraction_router"), {"extraction_router": "extraction_router", END: END})
+        workflow.add_conditional_edges("extraction_router", _next_or_end("structured_extraction"), {"structured_extraction": "structured_extraction", END: END})
+        workflow.add_conditional_edges("structured_extraction", _next_or_end("field_evidence"), {"field_evidence": "field_evidence", END: END})
+        workflow.add_conditional_edges("field_evidence", _next_or_end("evidence_validation"), {"evidence_validation": "evidence_validation", END: END})
+        workflow.add_conditional_edges("evidence_validation", _next_or_end("quality_gate"), {"quality_gate": "quality_gate", END: END})
+        workflow.add_conditional_edges("quality_gate", _next_or_end("record_resolution"), {"record_resolution": "record_resolution", END: END})
+        workflow.add_conditional_edges("record_resolution", _next_or_end("classification"), {"classification": "classification", END: END})
         workflow.add_conditional_edges("classification", _next_or_end("metadata_enrichment"), {"metadata_enrichment": "metadata_enrichment", END: END})
         workflow.add_conditional_edges("metadata_enrichment", _next_or_end("entity_extraction"), {"entity_extraction": "entity_extraction", END: END})
         workflow.add_conditional_edges("entity_extraction", _next_or_end("relation_extraction"), {"relation_extraction": "relation_extraction", END: END})

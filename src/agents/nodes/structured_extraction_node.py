@@ -6,8 +6,14 @@ from src.agents.prompts import STRUCTURED_EXTRACTOR_SYSTEM_PROMPT
 from src.core.logging import get_logger
 from src.core.settings import settings
 from src.core.tokenization import TokenCounter
-from src.schemas.models import ApprovedDatasetSchema, DocumentChunk, ExtractionResult
-from src.tools.groq_client import GroqClient
+from src.schemas.models import (
+    ApprovedDatasetSchema,
+    DocumentChunk,
+    ExtractedRecord,
+    ExtractionBatch,
+    ExtractionResult,
+)
+from src.tools.structured_generation import get_structured_generation_provider
 
 
 logger = get_logger(__name__)
@@ -21,7 +27,7 @@ def _mock_value(field_name: str, chunk: DocumentChunk) -> Any:
     return None
 
 
-def _mock_extraction(chunk: DocumentChunk, schema: ApprovedDatasetSchema) -> ExtractionResult:
+def _mock_extraction(chunk: DocumentChunk, schema: ApprovedDatasetSchema) -> ExtractionBatch:
     data: Dict[str, Any] = {}
     field_confidence: Dict[str, float] = {}
     for field in schema.fields:
@@ -30,15 +36,94 @@ def _mock_extraction(chunk: DocumentChunk, schema: ApprovedDatasetSchema) -> Ext
             data[field.field_name] = value
             field_confidence[field.field_name] = 0.9
     confidence = min(field_confidence.values(), default=0.0)
-    return ExtractionResult(
+    configured_records = chunk.source_metadata.get("mock_extraction_records")
+    raw_records = configured_records if isinstance(configured_records, list) else [data]
+    records = [ExtractedRecord(
+        local_record_id=f"{chunk.chunk_id}:record:{index:04d}",
         source_url=chunk.source_url,
-        data=data,
-        confidence=confidence,
-        field_confidence=field_confidence,
+        segment_id=chunk.chunk_id,
+        chunk_id=chunk.chunk_id,
         source_chunk_id=chunk.chunk_id,
+        data=record_data,
+        confidence=confidence,
+        field_confidence={
+            field_name: field_confidence.get(field_name, confidence)
+            for field_name, value in record_data.items()
+            if value not in (None, "", [], {})
+        },
         chunk_index=chunk.chunk_index,
         total_chunks=chunk.total_chunks,
+        extraction_method="semantic",
+    ) for index, record_data in enumerate(raw_records, start=1)]
+    return ExtractionBatch(
+        source_url=chunk.source_url,
+        segment_id=chunk.chunk_id,
+        chunk_id=chunk.chunk_id,
+        records=records,
     )
+
+
+def _normalize_batch(
+    batch: ExtractionBatch, chunk: DocumentChunk, *, method: str = "semantic"
+) -> ExtractionBatch:
+    batch.source_url = chunk.source_url
+    batch.segment_id = chunk.chunk_id
+    batch.chunk_id = chunk.chunk_id
+    for index, record in enumerate(batch.records, start=1):
+        record.source_url = chunk.source_url
+        record.segment_id = chunk.chunk_id
+        record.chunk_id = chunk.chunk_id
+        record.source_chunk_id = chunk.chunk_id
+        record.chunk_index = chunk.chunk_index
+        record.total_chunks = chunk.total_chunks
+        record.extraction_method = method
+        if not record.local_record_id or record.local_record_id.startswith("segment:record:"):
+            record.local_record_id = f"{chunk.chunk_id}:record:{index:04d}"
+        for evidence_refs in record.field_evidence.values():
+            for evidence in evidence_refs:
+                evidence.source_url = chunk.source_url
+                evidence.chunk_id = chunk.chunk_id
+    return batch
+
+
+def _legacy_result(record: ExtractedRecord) -> Dict[str, Any]:
+    """Temporary projection for pre-Phase-15 callers; canonical state uses batches."""
+    return ExtractionResult(
+        source_url=record.source_url,
+        data=record.data,
+        confidence=record.confidence,
+        field_confidence=record.field_confidence,
+        source_chunk_id=record.chunk_id,
+        chunk_index=record.chunk_index,
+        total_chunks=record.total_chunks,
+        extraction_method=record.extraction_method,
+    ).model_dump(mode="json")
+
+
+def _deterministic_batches(state: Dict[str, Any]) -> List[ExtractionBatch]:
+    raw_batches = state.get("deterministic_extraction_batches", [])
+    if raw_batches:
+        return [ExtractionBatch.model_validate(item) for item in raw_batches]
+    # Resume compatibility for a Phase-14 checkpoint that predates ExtractionBatch.
+    batches: List[ExtractionBatch] = []
+    for index, raw_result in enumerate(
+        state.get("deterministic_extraction_results", []), start=1
+    ):
+        legacy = ExtractionResult.model_validate(raw_result)
+        record = ExtractedRecord(
+            **legacy.model_dump(),
+            local_record_id=f"{legacy.source_chunk_id or 'legacy'}:record:{index:04d}",
+            segment_id=legacy.source_chunk_id,
+            chunk_id=legacy.source_chunk_id,
+        )
+        batches.append(ExtractionBatch(
+            source_url=legacy.source_url,
+            segment_id=legacy.source_chunk_id,
+            chunk_id=legacy.source_chunk_id,
+            records=[record],
+            warnings=["Adapted from a pre-Phase-15 deterministic extraction result."],
+        ))
+    return batches
 
 
 def _legacy_document_chunks(state: Dict[str, Any]) -> List[Dict[str, Any]]:
@@ -69,14 +154,26 @@ def structured_extraction_node(state: Dict[str, Any]) -> Dict[str, Any]:
             raise ValueError("An approved dataset schema is required before structured extraction.")
         schema = ApprovedDatasetSchema.model_validate(approved_schema)
         raw_chunks = state.get("document_chunks") or _legacy_document_chunks(state)
-        logger.info("Extracting structured data from %d document chunks.", len(raw_chunks))
-        results: List[Dict[str, Any]] = []
+        routes = state.get("extraction_routes", [])
+        if routes:
+            semantic_sources = {
+                route.get("source_url", "")
+                for route in routes
+                if route.get("method") == "semantic"
+            }
+            raw_chunks = [
+                chunk for chunk in raw_chunks
+                if chunk.get("source_url", chunk.get("source", "")) in semantic_sources
+            ]
+        logger.info("Semantically extracting %d routed document chunks.", len(raw_chunks))
+        batches = _deterministic_batches(state)
         errors = list(state.get("errors", []))
+        extraction_warnings = list(state.get("extraction_warnings", []))
         for raw_chunk in raw_chunks:
             try:
                 chunk = DocumentChunk.model_validate(raw_chunk)
                 if settings.data_source_provider == "mock":
-                    result = _mock_extraction(chunk, schema)
+                    batch = _mock_extraction(chunk, schema)
                 else:
                     chunk_metadata = {
                         "chunk_id": chunk.chunk_id,
@@ -90,18 +187,25 @@ def structured_extraction_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     user_prompt = (
                         f"Approved dataset schema: {schema.model_dump(by_alias=True)}\n"
                         f"Chunk metadata: {chunk_metadata}\n"
-                        "Required response keys: data, confidence, field_confidence. "
-                        "The top-level confidence must be a number from 0 to 1.\n"
+                        "Required response shape: an object with records[] and warnings[]. "
+                        "Each records[] item must contain local_record_id, data, confidence, "
+                        "field_confidence, and field_evidence. Return zero, one, or every "
+                        "distinct source-supported record; never cap the response to one record. "
+                        "Each populated field must have field_evidence with source_url, chunk_id, "
+                        "and evidence_text copied from the supplied chunk content. Never invent "
+                        "evidence; omit unsupported optional values and omit a record whose required "
+                        "value is unsupported. Each record confidence must be a number from 0 to 1.\n"
                         f"Chunk content:\n{chunk.content}"
                     )
-                    result = GroqClient().complete_json(
-                        STRUCTURED_EXTRACTOR_SYSTEM_PROMPT, user_prompt, ExtractionResult
+                    batch = get_structured_generation_provider().generate(
+                        system_prompt=STRUCTURED_EXTRACTOR_SYSTEM_PROMPT,
+                        user_prompt=user_prompt,
+                        output_model=ExtractionBatch,
+                        task_name="structured_extraction",
                     )
-                    result.source_url = chunk.source_url
-                    result.source_chunk_id = chunk.chunk_id
-                    result.chunk_index = chunk.chunk_index
-                    result.total_chunks = chunk.total_chunks
-                results.append(result.model_dump())
+                batch = _normalize_batch(batch, chunk)
+                batches.append(batch)
+                extraction_warnings.extend(batch.warnings)
             except Exception as error:
                 errors.append({
                     "node": "structured_extraction",
@@ -109,12 +213,19 @@ def structured_extraction_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     "chunk_id": raw_chunk.get("chunk_id"),
                     "error": str(error),
                 })
-        if raw_chunks and not results:
+        expected_work = bool(raw_chunks or state.get("extraction_routes"))
+        if expected_work and not batches:
             return {"errors": errors, "status": "failed", "pipeline_status": "failed"}
-        logger.info("Structured extraction completed for %d chunks.", len(results))
+        records = [record for batch in batches for record in batch.records]
+        results = [_legacy_result(record) for record in records]
+        logger.info(
+            "Extraction completed with %d batches and %d records.", len(batches), len(records)
+        )
         return {
+            "extraction_batches": [batch.model_dump(mode="json") for batch in batches],
             "chunk_extraction_results": results,
             "extraction_results": results,
+            "extraction_warnings": extraction_warnings,
             "errors": errors,
             "status": "extracting_data",
             "pipeline_status": "extracting_data",
