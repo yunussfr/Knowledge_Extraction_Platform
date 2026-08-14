@@ -1,0 +1,61 @@
+{
+  "benchmark_version": "1.0",
+  "contract": "phase21_ai_output_profiles",
+  "profiles": [
+    "structured",
+    "rag",
+    "graphrag"
+  ],
+  "filenames": {
+    "structured": "phase21_profiles.json",
+    "rag": "phase21_profiles_rag.json",
+    "graphrag": "phase21_profiles_graphrag.json"
+  },
+  "record_counts": {
+    "structured": 1,
+    "rag": 1,
+    "graphrag": 1
+  },
+  "top_level_fields": {
+    "structured": [
+      "_metadata",
+      "data",
+      "evidence",
+      "provenance",
+      "quality",
+      "schema"
+    ],
+    "rag": [
+      "chunk_id",
+      "content_hash",
+      "evidence",
+      "language",
+      "quality_score",
+      "record_data",
+      "schema_name",
+      "schema_version",
+      "section_path",
+      "source_url",
+      "source_urls",
+      "text",
+      "title"
+    ],
+    "graphrag": [
+      "claims",
+      "entities",
+      "provenance",
+      "quality",
+      "record_key",
+      "relations",
+      "schema_name",
+      "schema_version"
+    ]
+  },
+  "intentional_difference": true,
+  "graphrag": {
+    "entities": 1,
+    "claims": 2,
+    "relations": 0,
+    "claims_with_evidence": 2
+  }
+}

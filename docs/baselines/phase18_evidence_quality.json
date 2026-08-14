@@ -1,0 +1,26 @@
+{
+  "benchmark_version": "1.0",
+  "contract": "phase18_evidence_validation_quality_gate",
+  "gold": {
+    "records": 12,
+    "supported_records": 12,
+    "accepted_records": 12
+  },
+  "status_counts": {
+    "SUPPORTED": 12,
+    "PARTIALLY_SUPPORTED": 1,
+    "UNSUPPORTED": 1,
+    "CONTRADICTED": 1
+  },
+  "quality_gate": {
+    "assessed_records": 15,
+    "accepted_records": 12,
+    "rejected_records": 3,
+    "minimum_evidence_quality": 0.7,
+    "allow_partially_supported": false,
+    "unsupported_accepted_fields": 0,
+    "accepted_field_count": 35,
+    "unsupported_accepted_field_rate": 0.0,
+    "extractor_confidence_used": false
+  }
+}

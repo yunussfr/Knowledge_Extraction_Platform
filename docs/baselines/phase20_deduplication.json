@@ -1,0 +1,32 @@
+{
+  "benchmark_version": "1.0",
+  "contract": "phase20_staged_deduplication",
+  "metrics": {
+    "input_records": 8,
+    "output_records": 5,
+    "duplicates_removed": 3,
+    "remaining_exact_duplicate_rate": 0.0,
+    "stage_counts": {
+      "source_or_content": 1,
+      "exact_normalized_record": 1,
+      "schema_identity": 1
+    },
+    "identity_conflicts_retained": 1
+  },
+  "rejection_count": 3,
+  "source_duplicate_provenance": {
+    "source_urls": [
+      "https://a.test/source",
+      "https://mirror.test/source"
+    ],
+    "contributors": 2,
+    "evidence_refs": 4,
+    "deduplication": {
+      "stages": [
+        "source_or_content"
+      ],
+      "duplicate_count": 1,
+      "fingerprint": "{\"description\":\"same\",\"item_name\":\"source duplicate\"}"
+    }
+  }
+}

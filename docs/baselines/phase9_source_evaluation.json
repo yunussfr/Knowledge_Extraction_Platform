@@ -1,0 +1,35 @@
+{
+  "benchmark_version": "1.0",
+  "delta": {
+    "hard_policy_violation_rate": -0.25,
+    "policy_alignment_accuracy": 0.229167,
+    "source_precision_at_10": 0.35,
+    "source_precision_at_5": 0.5
+  },
+  "implementation": "phase9_deterministic_policy_evaluator",
+  "metrics": {
+    "candidate_count": 24,
+    "hard_policy_violation_rate": 0.0,
+    "hard_policy_violation_rate_by_policy": {
+      "policy_a": 0.0,
+      "policy_b": 0.0
+    },
+    "policy_alignment_accuracy": 0.75,
+    "policy_alignment_accuracy_by_policy": {
+      "policy_a": 0.541667,
+      "policy_b": 0.958333
+    },
+    "policy_count": 2,
+    "precision_at_10_by_policy": {
+      "policy_a": 0.9,
+      "policy_b": 0.5
+    },
+    "precision_at_5_by_policy": {
+      "policy_a": 1.0,
+      "policy_b": 0.8
+    },
+    "same_source_multi_policy_outcome_count": 9,
+    "source_precision_at_10": 0.7,
+    "source_precision_at_5": 0.9
+  }
+}

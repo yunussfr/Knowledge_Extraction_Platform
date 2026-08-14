@@ -1,0 +1,29 @@
+{
+  "after": {
+    "duplicate_selection_rate": 0.0,
+    "hard_policy_violation_rate": 0.0,
+    "max_domain_share": 0.3,
+    "precision": 1.0,
+    "unique_domain_count": 4.0,
+    "unique_source_type_count": 4.0
+  },
+  "before": {
+    "duplicate_selection_rate": 0.1,
+    "hard_policy_violation_rate": 0.0,
+    "max_domain_share": 0.4,
+    "precision": 0.9,
+    "unique_domain_count": 4.0,
+    "unique_source_type_count": 3.5
+  },
+  "benchmark_version": "1.0",
+  "delta": {
+    "duplicate_selection_rate": -0.1,
+    "hard_policy_violation_rate": 0.0,
+    "max_domain_share": -0.1,
+    "precision": 0.1,
+    "unique_domain_count": 0.0,
+    "unique_source_type_count": 0.5
+  },
+  "implementation": "phase10_policy_aware_diversity_selector",
+  "selection_limit": 5
+}

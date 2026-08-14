@@ -1,0 +1,51 @@
+{
+  "captured_at": "2026-08-13T23:49:00+03:00",
+  "environment": {
+    "implementation": "CPython",
+    "python": "3.12.13",
+    "platform": "Windows",
+    "requirements": "requirements-baseline.txt"
+  },
+  "commands": {
+    "install": "python -m venv .venv && .venv\\Scripts\\python.exe -m pip install -r requirements-baseline.txt",
+    "offline_tests": ".venv\\Scripts\\python.exe -m pytest -q",
+    "mock_baseline": ".venv\\Scripts\\python.exe -m scripts.capture_phase0_baseline --domain turkish_culture",
+    "live_checkpoint": "$env:RUN_INTEGRATION_TESTS='true'; $env:DATA_SOURCE_PROVIDER='firecrawl'; .venv\\Scripts\\python.exe -m pytest tests/test_live_integration.py -q"
+  },
+  "offline_test_result": {
+    "passed": 46,
+    "skipped": 1,
+    "warnings": 39
+  },
+  "mock_pipeline": {
+    "domain": "turkish_culture",
+    "provider": "mock",
+    "status": "completed",
+    "queries": 1,
+    "candidate_urls": 1,
+    "selected_urls": 1,
+    "unique_domains": 1,
+    "scraped_sources": 1,
+    "chunks": 1,
+    "extraction_results": 1,
+    "accepted_records": 1,
+    "rejected_records": 0,
+    "errors": 0,
+    "runtime_seconds_observed": 0.245986,
+    "model_calls": 0,
+    "output_created_in_temporary_directory": true
+  },
+  "live_checkpoint_result": {
+    "status": "failed",
+    "stage": "research_planner",
+    "category": "provider_output_contract_validation",
+    "evidence": "The live Groq response omitted the required ResearchPlan.research_topic field and Pydantic rejected it.",
+    "credentials_printed": false,
+    "full_acquisition_started": false
+  },
+  "known_warnings": [
+    "metadata_enrichment_node.py uses deprecated datetime.datetime.utcnow().",
+    "The live provider output does not currently satisfy the ResearchPlan contract.",
+    "The legacy requirements.txt is not the canonical Phase 0 install input."
+  ]
+}

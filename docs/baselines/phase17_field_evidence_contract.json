@@ -1,0 +1,15 @@
+{
+  "benchmark_version": "1.0",
+  "contract": "phase17_field_evidence",
+  "page_count": 8,
+  "input_records": 12,
+  "metrics": {
+    "emitted_records": 12,
+    "rejected_records": 0,
+    "merged_records": 12,
+    "evidenced_fields": 35,
+    "evidence_refs": 35,
+    "traceable_evidence_refs": 35,
+    "records_with_usable_evidence": 12
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "baseline": "legacy_deterministic",
+  "benchmark_version": "1.0",
+  "extraction": {
+    "duplicate_rate": 0.125,
+    "expected_records": 12,
+    "field_precision": 0.956522,
+    "field_recall": 0.542857,
+    "page_count": 8,
+    "predicted_records": 8,
+    "record_precision": 0.875,
+    "record_recall": 0.583333,
+    "schema_valid_rate": 0.875,
+    "unsupported_field_rate": 1.0
+  },
+  "source_evaluation": {
+    "candidate_count": 24,
+    "hard_policy_violation_rate": 0.25,
+    "policy_alignment_accuracy": 0.520833,
+    "policy_count": 2,
+    "precision_at_10_by_policy": {
+      "policy_a": 0.4,
+      "policy_b": 0.3
+    },
+    "precision_at_5_by_policy": {
+      "policy_a": 0.4,
+      "policy_b": 0.4
+    },
+    "same_source_multi_policy_outcome_count": 9,
+    "source_precision_at_10": 0.35,
+    "source_precision_at_5": 0.4
+  }
+}

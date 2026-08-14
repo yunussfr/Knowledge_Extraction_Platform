@@ -1,0 +1,18 @@
+{
+  "batch_count": 8,
+  "benchmark": "phase15_contract_roundtrip",
+  "benchmark_version": "1.0",
+  "metrics": {
+    "duplicate_rate": 0.0,
+    "expected_records": 12,
+    "field_precision": 1.0,
+    "field_recall": 1.0,
+    "page_count": 8,
+    "predicted_records": 12,
+    "record_precision": 1.0,
+    "record_recall": 1.0,
+    "schema_valid_rate": 1.0,
+    "unsupported_field_rate": 0.0
+  },
+  "note": "Contract capacity ceiling over frozen gold; not live provider quality."
+}

@@ -1,0 +1,33 @@
+{
+  "benchmark_version": "1.0",
+  "contract": "phase19_cross_source_resolution",
+  "metrics": {
+    "input_records": 3,
+    "resolved_records": 2,
+    "cross_source_records": 1,
+    "contributors": 3,
+    "conflicts": 1,
+    "method_counts": {
+      "explicit_identity": 2,
+      "normalized_identity": 0,
+      "composite_identity": 0,
+      "local_record": 0
+    }
+  },
+  "multi_source_record": {
+    "resolution_method": "explicit_identity",
+    "source_urls": [
+      "https://fixtures.example/resolution/source-a",
+      "https://fixtures.example/resolution/source-b"
+    ],
+    "contributors": 2,
+    "item_name_evidence_sources": [
+      "https://fixtures.example/resolution/source-a",
+      "https://fixtures.example/resolution/source-b"
+    ],
+    "conflicts": 1,
+    "kept_description": "fault-tolerant retrieval service",
+    "conflicting_description": "resilient retrieval platform",
+    "evidence_quality_score": 0.8
+  }
+}
