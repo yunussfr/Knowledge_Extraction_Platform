@@ -1,1 +1,0 @@
-# Makes schemas a package
