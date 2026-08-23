@@ -154,10 +154,9 @@ def test_profiles_are_intentionally_different_and_keep_required_evidence(tmp_pat
     assert structured["evidence"]["item_name"][0]["evidence_text"] == "Alpha Engine"
     assert "data" not in rag
     assert rag["text"] == (
-        "Item Name: Alpha Engine\n"
-        "Description: compact inference runtime\n"
-        'Tags: ["runtime", "inference"]'
+        "Alpha Engine is a compact inference runtime with runtime and inference tags."
     )
+    assert "record_data" not in rag
     assert rag["section_path"] == "Runtime Overview"
     assert rag["content_hash"] == "content-hash-alpha"
     assert rag["quality_score"] == 0.91
@@ -202,3 +201,16 @@ def test_invalid_output_profile_fails_clearly(tmp_path):
 
     assert result["status"] == "failed"
     assert "Unsupported output profile" in result["errors"][-1]["error"]
+
+
+def test_rag_profile_does_not_require_structured_schema(tmp_path):
+    state = _state(tmp_path, ["rag"])
+    state["approved_dataset_schema"] = {}
+    state["accepted_records"] = []
+
+    result = export_node(state)
+
+    assert result["status"] == "completed"
+    rag = json.loads((tmp_path / "profile_records_rag.json").read_text(encoding="utf-8"))[0]
+    assert rag["text"].startswith("Alpha Engine is")
+    assert rag["chunk_id"] == CHUNK_ID

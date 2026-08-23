@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 from src.agents.prompts import STRUCTURED_EXTRACTOR_SYSTEM_PROMPT
 from src.core.logging import get_logger
+from src.core.retry import is_retryable_provider_error
 from src.core.settings import settings
 from src.core.tokenization import TokenCounter
 from src.schemas.models import (
@@ -172,37 +173,51 @@ def structured_extraction_node(state: Dict[str, Any]) -> Dict[str, Any]:
         for raw_chunk in raw_chunks:
             try:
                 chunk = DocumentChunk.model_validate(raw_chunk)
-                if settings.data_source_provider == "mock":
-                    batch = _mock_extraction(chunk, schema)
-                else:
-                    chunk_metadata = {
-                        "chunk_id": chunk.chunk_id,
-                        "chunk_index": chunk.chunk_index,
-                        "total_chunks": chunk.total_chunks,
-                        "heading": chunk.heading,
-                        "source_url": chunk.source_url,
-                        "source_title": chunk.source_title,
-                        "source_metadata": chunk.source_metadata,
-                    }
-                    user_prompt = (
-                        f"Approved dataset schema: {schema.model_dump(by_alias=True)}\n"
-                        f"Chunk metadata: {chunk_metadata}\n"
-                        "Required response shape: an object with records[] and warnings[]. "
-                        "Each records[] item must contain local_record_id, data, confidence, "
-                        "field_confidence, and field_evidence. Return zero, one, or every "
-                        "distinct source-supported record; never cap the response to one record. "
-                        "Each populated field must have field_evidence with source_url, chunk_id, "
-                        "and evidence_text copied from the supplied chunk content. Never invent "
-                        "evidence; omit unsupported optional values and omit a record whose required "
-                        "value is unsupported. Each record confidence must be a number from 0 to 1.\n"
-                        f"Chunk content:\n{chunk.content}"
-                    )
-                    batch = get_structured_generation_provider().generate(
-                        system_prompt=STRUCTURED_EXTRACTOR_SYSTEM_PROMPT,
-                        user_prompt=user_prompt,
-                        output_model=ExtractionBatch,
-                        task_name="structured_extraction",
-                    )
+                batch = None
+                last_error: Exception | None = None
+                attempts = 1 if settings.data_source_provider == "mock" else max(
+                    1, settings.max_extraction_retries
+                )
+                for attempt in range(attempts):
+                    try:
+                        if settings.data_source_provider == "mock":
+                            batch = _mock_extraction(chunk, schema)
+                        else:
+                            chunk_metadata = {
+                                "chunk_id": chunk.chunk_id,
+                                "chunk_index": chunk.chunk_index,
+                                "total_chunks": chunk.total_chunks,
+                                "heading": chunk.heading,
+                                "source_url": chunk.source_url,
+                                "source_title": chunk.source_title,
+                                "source_metadata": chunk.source_metadata,
+                            }
+                            user_prompt = (
+                                f"Approved dataset schema: {schema.model_dump(by_alias=True)}\n"
+                                f"Chunk metadata: {chunk_metadata}\n"
+                                "Required response shape: an object with records[] and warnings[]. "
+                                "Each records[] item must contain local_record_id, data, confidence, "
+                                "field_confidence, and field_evidence. Return zero, one, or every "
+                                "distinct source-supported record; never cap the response to one record. "
+                                "Each populated field must have field_evidence with source_url, chunk_id, "
+                                "and evidence_text copied from the supplied chunk content. Never invent "
+                                "evidence; omit unsupported optional values and omit a record whose required "
+                                "value is unsupported. Each record confidence must be a number from 0 to 1.\n"
+                                f"Chunk content:\n{chunk.content}"
+                            )
+                            batch = get_structured_generation_provider().generate(
+                                system_prompt=STRUCTURED_EXTRACTOR_SYSTEM_PROMPT,
+                                user_prompt=user_prompt,
+                                output_model=ExtractionBatch,
+                                task_name="structured_extraction",
+                            )
+                        break
+                    except Exception as error:
+                        last_error = error
+                        if attempt + 1 >= attempts or not is_retryable_provider_error(error):
+                            raise
+                if batch is None:
+                    raise last_error or RuntimeError("Chunk extraction produced no batch.")
                 batch = _normalize_batch(batch, chunk)
                 batches.append(batch)
                 extraction_warnings.extend(batch.warnings)

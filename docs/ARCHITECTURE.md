@@ -1308,9 +1308,18 @@ Validated records with evidence, provenance, and quality metadata.
 
 ## 35. Output Profiles
 
+Output requirements are selected at the request boundary, independently of
+the extraction method. `dataset.profile` provides the single-profile default;
+`output.profiles` may request multiple downstream artifacts. Acquisition,
+preview, evaluation, and deterministic processing remain shared, while each
+profile consumes the evidence layer appropriate to its semantics.
+
 ### Structured
 
 For topic-specific records and knowledge bases.
+
+Structured output consumes accepted, resolved, and deduplicated records and
+retains their field evidence, provenance, quality, and approved schema.
 
 ### RAG
 
@@ -1327,11 +1336,18 @@ content_hash
 quality_score
 ```
 
+RAG output consumes evidence-preserving document chunks directly. Structured
+extraction and record resolution are not prerequisites when retrieval text is
+already sufficient; unavailable metadata remains empty rather than fabricated.
+
 ### GraphRAG Preparation
 
 Only evidence-backed entities/claims/relations.
 
 No co-occurrence-only relations.
+
+GraphRAG preparation is a bounded projection of verified records and exact
+evidence references. It does not create a Domain Knowledge Map.
 
 ---
 
@@ -1363,6 +1379,7 @@ class AgentState(TypedDict, total=False):
     rejected_records: list[RejectedRecord]
 
     metrics: RunMetrics
+    run_manifest: dict
     errors: list[PipelineError]
 
     status: str

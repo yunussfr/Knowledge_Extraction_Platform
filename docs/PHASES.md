@@ -3,7 +3,7 @@
 # Knowledge Extraction Platform — Current Iteration Development Phases
 
 ## 1. Objective
-
+current iteration development
 This plan evolves the existing platform into a request-aware, Crawl4AI-enabled, evidence-backed dataset generation system for AI projects.
 
 System prompt wording is intentionally managed separately and is not part of these phases.
@@ -136,7 +136,7 @@ Prepare 5–10 representative pages with manually known expected records and evi
 Must include:
 
 ```text
-zero-record page
+zero-record pagerepresentative
 single-record page
 many-record page
 repeated DOM cards
@@ -337,7 +337,7 @@ ResearchPlanner has all request context needed for policy-aware planning.
 Add Crawl4AI without coupling graph nodes directly to it.
 
 ## Suggested Structure
-
+absent
 ```text
 src/tools/web/
 ├── __init__.py

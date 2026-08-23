@@ -27,13 +27,7 @@
     ],
     "rag": [
       "chunk_id",
-      "content_hash",
-      "evidence",
-      "language",
       "quality_score",
-      "record_data",
-      "schema_name",
-      "schema_version",
       "section_path",
       "source_url",
       "source_urls",

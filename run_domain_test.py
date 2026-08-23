@@ -41,8 +41,10 @@ def run_domain_extraction(domain: str, approve_schema: bool = False, resume: boo
     if state["dataset_name"]:
         print(f"Dataset name: {state['dataset_name']}")
     if resume:
-        final_state = pipeline.load_pending_review_state(domain, state["dataset_name"])
-        print("Resumed saved pipeline state at schema approval.")
+        final_state = pipeline.load_pending_review_state(
+            domain, state["dataset_name"], config=config
+        )
+        print("Resumed saved pipeline state without repeating completed stages.")
     else:
         final_state = pipeline.invoke(state)
 

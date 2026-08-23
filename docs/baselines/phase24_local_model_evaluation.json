@@ -1,0 +1,7 @@
+{
+  "benchmark": "phase24_local_model_evaluation",
+  "benchmark_version": "1.0",
+  "local_first_enabled": false,
+  "reason": "No local structured-generation provider was injected.",
+  "status": "unavailable"
+}

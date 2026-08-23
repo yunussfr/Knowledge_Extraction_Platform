@@ -81,6 +81,23 @@ Metadata, quality, and validation
 
 `record_merge_node.py` conservatively combines chunk results only when an approved string field provides a deterministic name, title, or identifier match. Array values are unioned; a missing value is filled from evidence; conflicting scalar values are retained according to field confidence and recorded in `merge_conflicts`. Merged confidence is the minimum confidence among contributors that supplied factual fields. `contributing_chunk_ids` remain in final `_metadata`. Final exact-data deduplication also combines source/chunk provenance instead of discarding it.
 
+## Output Profiles
+
+The request selects downstream requirements separately from acquisition and
+extraction. `dataset.profile` is the default; `output.profiles` can request
+multiple artifacts.
+
+- `structured` exports accepted, resolved, and deduplicated records with domain data, field evidence, provenance, quality, and approved schema metadata.
+- `rag` exports one retrieval document per evidence-preserving chunk with text, title, source URL, section path, chunk ID, language, content hash, and quality score. It does not require structured extraction when chunk text is sufficient.
+- `graphrag` exports only entities, claims, and relations whose evidence references are traceable to supplied chunks. It is not a Domain Knowledge Map and excludes co-occurrence-only relations.
+
+Each run writes a `<dataset>_manifest.json` alongside its outputs. The
+manifest contains policy/source, acquisition, extraction/validation,
+deduplication, token/cost, output, and error metrics. Stage checkpoints are
+written as `<dataset>_checkpoint.json`; `run_domain_test.py --resume` can
+continue from a saved approval or completed stage without repeating earlier
+work.
+
 The existing graph keeps final deduplication after schema/confidence validation, rather than moving it in front of metadata. This preserves the project’s established quality gate: only valid final records are deduplicated. Chunk-level overlap is already handled earlier by conservative record merging.
 
 ## Human-in-the-Loop Schema Approval
@@ -122,6 +139,15 @@ Full normalized documents are preserved in `acquired_documents` as the Bronze la
 Each Silver record retains Bronze raw content and its original content hash, plus processed content, a separate processed hash, word count, removed-boilerplate count, metadata, and an `usable`/`thin`/`empty` status. `CONTENT_MIN_WORDS` (default 30, overridable by request `processing.minimum_words`) marks short documents as `thin` without discarding them. Empty documents are recorded and excluded from chunking; other sources continue. Bronze `acquired_documents` are never overwritten.
 
 Neither web provider determines dataset fields, evidence confidence, or final record validity.
+
+### SourcePolicy semantics
+
+`seed_urls` are starting references, not an allowlist. `preferred_domains` and
+`preferred_source_types` are soft ranking signals. `allowed_domains`,
+`blocked_domains`, `allowed_source_types`, `blocked_source_types`, and
+`minimum_content_depth` are hard rules only when explicitly supplied. Omitted
+or empty allow/block lists impose no hidden restriction; desired and avoided
+content likewise affect ranking without silently filtering sources.
 
 ## Extraction Routing
 
@@ -291,6 +317,16 @@ Copy-Item .env.example .env
 ```
 
 `crawl4ai-setup` installs the Playwright browser runtime required for real page acquisition. Crawl4AI's database and cache default to the repository-local, gitignored `.runtime/.crawl4ai` directory rather than an implicit user-home directory. The legacy broad `requirements.txt` is retained for later dependency cleanup; `requirements-baseline.txt` is the current reproducible project environment.
+
+The focused Phase 24 local-model harness is opt-in:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.run_phase24_local_model_evaluation
+```
+
+It reports `unavailable` unless a local structured-generation provider is
+injected. Local-first routing is not enabled without same-gold benchmark
+evidence.
 
 The interactive run pauses after draft-schema generation. Review the displayed JSON file, then choose:
 

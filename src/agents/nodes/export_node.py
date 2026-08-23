@@ -55,8 +55,17 @@ def _legacy_records(state: AgentState) -> list[dict[str, Any]]:
     return records
 
 
-def _profiles(output_config: Dict[str, Any], *, approved_schema: bool) -> list[str]:
-    raw_profiles = output_config.get("profiles", ["structured"])
+def _profiles(
+    output_config: Dict[str, Any],
+    dataset_config: Dict[str, Any],
+) -> list[str]:
+    """Resolve the downstream requirement without coupling it to extraction.
+
+    ``dataset.profile`` is the request-level default.  An explicit
+    ``output.profiles`` list can request several downstream artifacts while
+    keeping the shared acquisition/processing core unchanged.
+    """
+    raw_profiles = output_config.get("profiles", dataset_config.get("profile", "structured"))
     if isinstance(raw_profiles, str):
         raw_profiles = [raw_profiles]
     if not isinstance(raw_profiles, list) or not raw_profiles:
@@ -69,8 +78,6 @@ def _profiles(output_config: Dict[str, Any], *, approved_schema: bool) -> list[s
             raise ValueError(f"Unsupported output profile: {raw_profile}")
         if profile not in profiles:
             profiles.append(profile)
-    if not approved_schema and profiles != ["structured"]:
-        raise ValueError("RAG and GraphRAG profiles require an approved dataset schema.")
     return profiles
 
 
@@ -179,35 +186,51 @@ def _content_hash(metadata: Dict[str, Any], source_url: str) -> str:
     )
 
 
+def _chunk_quality_index(state: AgentState) -> dict[tuple[str, str], float]:
+    """Index quality already computed for records, without inventing evidence."""
+    quality: dict[tuple[str, str], float] = {}
+    for record in state.get("accepted_records", []):
+        metadata = dict(record.get("_metadata", {}))
+        score = float(metadata.get("evidence_quality_score", 0.0) or 0.0)
+        for contributor in metadata.get("contributors", []):
+            key = (
+                contributor.get("source_url", metadata.get("source_url", "")),
+                contributor.get("chunk_id", ""),
+            )
+            if key[0] and key[1]:
+                quality[key] = max(score, quality.get(key, 0.0))
+    return quality
+
+
 def _rag_records(
-    records: list[Dict[str, Any]],
-    schema: ApprovedDatasetSchema,
     state: AgentState,
 ) -> list[dict[str, Any]]:
-    headings = {
-        (chunk.get("source_url", ""), chunk.get("chunk_id", "")): chunk.get("heading", "")
-        for chunk in state.get("document_chunks", [])
-    }
+    """Build retrieval documents from processed chunks, not structured records."""
+    quality = _chunk_quality_index(state)
     output = []
-    for record in records:
-        data = dict(record.get("data", {}))
-        metadata = dict(record.get("_metadata", {}))
-        source_url, chunk_id = _primary_chunk(metadata)
+    for raw_chunk in state.get("document_chunks", []):
+        content = str(raw_chunk.get("content", "")).strip()
+        if not content:
+            continue
+        source_url = str(raw_chunk.get("source_url", ""))
+        chunk_id = str(raw_chunk.get("chunk_id", ""))
+        source_metadata = dict(raw_chunk.get("source_metadata", {}))
+        content_hash = str(
+            source_metadata.get("content_hash")
+            or source_metadata.get("processed_content_hash")
+            or ""
+        )
         output.append(RAGOutputRecord(
-            text=_render_rag_text(data, schema),
-            title=_record_title(data, metadata),
+            text=content,
+            title=str(raw_chunk.get("source_title", "")),
             source_url=source_url,
-            source_urls=metadata.get("source_urls", [source_url] if source_url else []),
-            section_path=headings.get((source_url, chunk_id), ""),
+            source_urls=[source_url] if source_url else [],
+            section_path=str(raw_chunk.get("heading", "")),
             chunk_id=chunk_id,
-            language=metadata.get("language", ""),
-            content_hash=_content_hash(metadata, source_url),
-            quality_score=metadata.get("evidence_quality_score", 0.0),
-            evidence=metadata.get("field_evidence", {}),
-            record_data=data,
-            schema_name=schema.name,
-            schema_version=str(schema.schema_version),
-        ).model_dump(mode="json"))
+            language=str(source_metadata.get("language", "")),
+            content_hash=content_hash,
+            quality_score=quality.get((source_url, chunk_id), 0.0),
+        ).model_dump(mode="json", exclude_defaults=True))
     return output
 
 
@@ -341,12 +364,13 @@ def export_node(state: AgentState) -> Dict[str, Any]:
     try:
         domain = state.get("domain", "unknown")
         dataset_name = state.get("dataset_name") or f"{domain}_latest"
-        output_config = state.get("config", {}).get("output", {})
+        config = state.get("config", {})
+        output_config = config.get("output", {})
         output_format = output_config.get("format", settings.default_output_format).lower()
         if output_format not in {"json", "jsonl"}:
             raise ValueError(f"Unsupported output format: {output_format}")
         approved = state.get("approved_dataset_schema")
-        profiles = _profiles(output_config, approved_schema=bool(approved))
+        profiles = _profiles(output_config, config.get("dataset", {}))
         output_dir = Path(output_config.get("directory", settings.output_directory))
         output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -358,11 +382,19 @@ def export_node(state: AgentState) -> Dict[str, Any]:
                 if profile == "structured":
                     output_records[profile] = _structured_records(accepted, schema)
                 elif profile == "rag":
-                    output_records[profile] = _rag_records(accepted, schema, state)
+                    output_records[profile] = _rag_records(state)
                 else:
+                    if not approved:
+                        raise ValueError("GraphRAG preparation requires an approved dataset schema.")
                     output_records[profile] = _graphrag_records(accepted, schema, state)
         else:
-            output_records["structured"] = _legacy_records(state)
+            for profile in profiles:
+                if profile == "structured":
+                    output_records[profile] = _legacy_records(state)
+                elif profile == "rag":
+                    output_records[profile] = _rag_records(state)
+                else:
+                    raise ValueError("GraphRAG preparation requires an approved dataset schema.")
 
         output_paths: dict[str, str] = {}
         for profile, records in output_records.items():

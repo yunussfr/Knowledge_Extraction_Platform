@@ -1,0 +1,11 @@
+# Minimal reproducible runtime and offline-test environment.
+crawl4ai==0.9.2
+firecrawl-py==4.34.0
+groq==1.6.0
+langgraph==1.2.10
+pydantic==2.13.3
+PyYAML==6.0.3
+python-dotenv==1.2.2
+tiktoken==0.13.0
+pytest==9.0.2
+pytest-asyncio==1.4.0

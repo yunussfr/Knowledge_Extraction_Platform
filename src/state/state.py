@@ -77,6 +77,13 @@ class AgentState(TypedDict):
     deduplication_metrics: Dict[str, Any]
     output_profiles: List[str]
     output_paths: Dict[str, str]
+    run_metrics: Dict[str, Any]
+    run_manifest: Dict[str, Any]
+    manifest_path: str
+    checkpoint_stage: str
+    checkpoint_path: str
+    checkpoint_history: List[Dict[str, Any]]
+    resume_from: str
     errors: List[Dict[str, Any]]
     status: StatusType
     pipeline_status: StatusType
@@ -147,6 +154,13 @@ def create_initial_state(domain: str, config: Dict[str, Any]) -> AgentState:
         "deduplication_metrics": {},
         "output_profiles": [],
         "output_paths": {},
+        "run_metrics": {},
+        "run_manifest": {},
+        "manifest_path": "",
+        "checkpoint_stage": "",
+        "checkpoint_path": "",
+        "checkpoint_history": [],
+        "resume_from": "",
         "errors": [],
         "status": "created" if dataset_config.get("topic") else "acquiring",
         "pipeline_status": "created" if dataset_config.get("topic") else "acquiring",
