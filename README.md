@@ -4,6 +4,53 @@
 
 This project generates evidence-backed, structured datasets from web sources for downstream RAG, GraphRAG, knowledge-base, machine-learning, fine-tuning, and agent applications. It is not a chatbot or a RAG application. A user supplies a dataset topic, purpose, and optional constraints; the pipeline plans research, discovers and evaluates real sources, proposes a dataset schema, waits for human approval, extracts records, validates them, and writes JSON or JSONL output.
 
+## Current Status
+
+The current implementation covers the request-aware pipeline through the final
+acceptance iteration (Phases 0–27). The offline/frozen acceptance record is
+`268 passed, 13 skipped`; local-fixture Crawl4AI checks passed separately with
+12 tests. Live Firecrawl/Groq execution is intentionally opt-in and still
+requires the user's provider credentials, so the offline result must not be
+read as a live-provider quality claim.
+
+The project separates three questions that are often incorrectly combined:
+
+1. **What information is needed?** The request and the human-approved schema
+   define the dataset fields and identity rules.
+2. **How is it extracted and verified?** Source discovery, bounded acquisition,
+   deterministic extraction, chunked structured extraction, evidence binding,
+   validation, resolution, and deduplication produce the Gold records.
+3. **How is it exported for a consumer?** Structured, RAG, and GraphRAG are
+   different output profiles over the same evidence-preserving run state.
+
+## Quick Start
+
+Use the repository's `.venv` Python executable for every command. The fastest
+offline demonstration is:
+
+```powershell
+py -3.12 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements-baseline.txt
+Copy-Item .env.example .env
+\.venv\Scripts\python.exe run_domain_test.py --domain turkish_culture --approve-schema
+```
+
+This uses `DATA_SOURCE_PROVIDER=mock`, so it needs no API key or internet
+connection. For the normal human-in-the-loop flow, omit
+`--approve-schema`; inspect and optionally edit the draft schema in
+`knowledge/review/`, then select approval in the terminal. If the process is
+closed, continue from the saved state with:
+
+```powershell
+\.venv\Scripts\python.exe run_domain_test.py --domain turkish_culture --resume
+```
+
+The available example domains are `turkish_culture` and `space_science`.
+Create another domain by copying a `configs/domains/<domain>/request.yaml`
+file and changing its dataset topic, purpose, source policy, schema, and
+output settings. The terminal runner is the current presentation layer; the
+pipeline approval operation remains reusable by a future UI.
+
 ## Architecture
 
 The existing application path is preserved:
@@ -14,10 +61,15 @@ configs/domains/<domain>/request.yaml
   -> src/agents/graphs/phase2_pipeline.py
   -> src/agents/nodes/*
   -> src/state/state.py
-  -> knowledge/datasets/<dataset-name>.json
+  -> knowledge/datasets/<dataset-name>[_rag|_graphrag].json (or .jsonl)
 ```
 
 `AgentState` is the observable data contract between nodes. It holds the request, research plan, canonical source registry, candidate and selected sources, draft and approved schemas, scraped documents, extraction results, accepted/rejected records, errors, and pipeline status. This keeps a future UI independent of internal Python objects.
+
+The current canonical orchestrator is `src/agents/graphs/phase2_pipeline.py`.
+The older `src/graph/` and several root-level tool wrappers remain only as
+compatibility surfaces; they are not the normal CLI path. See
+`docs/LEGACY_AUDIT.md` before changing or removing them.
 
 ## Core Pipeline
 
@@ -90,6 +142,20 @@ multiple artifacts.
 - `structured` exports accepted, resolved, and deduplicated records with domain data, field evidence, provenance, quality, and approved schema metadata.
 - `rag` exports one retrieval document per evidence-preserving chunk with text, title, source URL, section path, chunk ID, language, content hash, and quality score. It does not require structured extraction when chunk text is sufficient.
 - `graphrag` exports only entities, claims, and relations whose evidence references are traceable to supplied chunks. It is not a Domain Knowledge Map and excludes co-occurrence-only relations.
+
+When all three profiles are requested, the output directory contains:
+
+| Profile | File | Primary consumer |
+|---|---|---|
+| `structured` | `<dataset>.json` or `.jsonl` | applications that need validated records and field evidence |
+| `rag` | `<dataset>_rag.json` or `.jsonl` | vector/retrieval indexing from source-preserving chunks |
+| `graphrag` | `<dataset>_graphrag.json` or `.jsonl` | graph loading from evidence-backed entities and relations |
+
+The first profile in the configured list is also reported as the primary
+output in the validation report. A run additionally writes
+`<dataset>_manifest.json` and `<dataset>_checkpoint.json` with metrics and
+resumable state. Checkpoint files are user artifacts; do not delete them while
+trying to resume a run.
 
 Each run writes a `<dataset>_manifest.json` alongside its outputs. The
 manifest contains policy/source, acquisition, extraction/validation,
@@ -256,8 +322,10 @@ Each domain has a request at `configs/domains/<domain>/request.yaml`:
 
 ```yaml
 dataset:
+  name: turkish_coffee
   topic: Traditional Turkish coffee culture
   purpose: Evidence-backed records for RAG and knowledge-base systems.
+  profile: structured
 research:
   max_queries: 10
   max_sources: 20
