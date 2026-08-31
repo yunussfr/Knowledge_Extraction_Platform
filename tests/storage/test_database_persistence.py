@@ -58,7 +58,7 @@ def test_pipeline_artifacts_persist_and_repeat_is_idempotent(tmp_path):
 def test_models_can_bootstrap_clean_database(tmp_path):
     engine = create_engine(f"sqlite:///{tmp_path / 'empty.db'}")
     Base.metadata.create_all(engine)
-    assert set(Base.metadata.tables) == {"datasets", "research_runs", "sources", "documents", "document_chunks", "dataset_records", "field_evidence"}
+    assert set(Base.metadata.tables) == {"datasets", "research_runs", "sources", "documents", "document_chunks", "dataset_records", "field_evidence", "entities", "facts", "relations", "fact_evidence", "dataset_record_entities", "coverage_states", "research_tasks"}
 
 
 def test_persistence_transaction_rolls_back_on_serialization_failure(tmp_path):

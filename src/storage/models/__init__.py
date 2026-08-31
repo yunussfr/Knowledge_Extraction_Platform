@@ -9,5 +9,7 @@ from src.storage.models.entities import (
     ResearchRun,
     Source,
 )
+from src.storage.models.knowledge import DatasetRecordEntity, Entity, Fact, FactEvidence, Relation
+from src.storage.models.coverage import CoverageState, ResearchTask
 
-__all__ = ["Dataset", "ResearchRun", "Source", "Document", "Chunk", "DatasetRecord", "Evidence"]
+__all__ = ["Dataset", "ResearchRun", "Source", "Document", "Chunk", "DatasetRecord", "Evidence", "Entity", "Fact", "Relation", "FactEvidence", "DatasetRecordEntity"]

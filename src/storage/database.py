@@ -42,6 +42,14 @@ def initialize_database(config: dict[str, Any] | None = None) -> None:
         ResearchRun,
         Source,
     )
+    from src.storage.models.knowledge import (  # noqa: F401
+        DatasetRecordEntity,
+        Entity,
+        Fact,
+        FactEvidence,
+        Relation,
+    )
+    from src.storage.models.coverage import CoverageState, ResearchTask  # noqa: F401
 
     factory = create_session_factory(config)
     Base.metadata.create_all(factory.kw["bind"])

@@ -23,7 +23,7 @@ FIXTURE_PATH = PROJECT_ROOT / "tests" / "evaluation" / "fixtures" / "extraction_
 
 
 def _schema(fixture: dict[str, Any]) -> dict[str, Any]:
-    return {
+    result = {
         "name": "phase24_local_model_gold",
         "description": "Frozen Phase 24 comparison schema.",
         "fields": [
@@ -72,6 +72,14 @@ def run_local_model_benchmark(
             f"Approved schema: {_schema(fixture)}\n"
             f"Page ID: {page['page_id']}\n"
             f"Source URL: {chunk.source_url}\n"
+            "Return a JSON object with exactly records[] and warnings[]. "
+            "Each record must be an object with local_record_id, data, confidence, field_confidence, and field_evidence. "
+            "Put extracted schema fields inside data. For each populated data field, field_evidence must be a list "
+            "of objects containing source_url, chunk_id, and exact evidence_text copied from the chunk. "
+            "Return an empty records array when no supported record exists. "
+            "For prose such as 'Solaris Engine is a compact inference runtime.', use item_name='Solaris Engine' "
+            "and description='a compact inference runtime' rather than repeating the subject; remove sentence-ending "
+            "punctuation from field values when the source value does not include it.\n"
             f"Chunk content:\n{chunk.content}"
         )
         batch = provider.generate(
@@ -86,16 +94,24 @@ def run_local_model_benchmark(
         })
     elapsed = time.perf_counter() - started
     metrics = evaluate_extraction(fixture, {"extraction_predictions": predictions})
-    return {
+    result = {
         "benchmark_version": "1.0",
         "benchmark": "phase24_local_model_evaluation",
         "status": "completed",
-        "local_first_enabled": False,
+        "local_first_enabled": bool(getattr(provider, "local_first_enabled", False)),
         "provider": provider.provider_name,
         "metrics": metrics,
         "latency_seconds": round(elapsed, 6),
         "note": "Local-first routing requires an explicit quality comparison and is not enabled by this harness.",
     }
+    if hasattr(provider, "local_calls"):
+        result["routing_metrics"] = {
+            "local_calls": provider.local_calls,
+            "cloud_calls": provider.cloud_calls,
+            "fallback_calls": provider.fallback_calls,
+            "fallback_rate": round(provider.fallback_calls / provider.local_calls, 6) if provider.local_calls else 0.0,
+        }
+    return result
 
 
 def main() -> None:

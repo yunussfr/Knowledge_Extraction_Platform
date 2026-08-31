@@ -36,6 +36,8 @@ from src.agents.nodes.source_selector_node import source_selector_node
 from src.agents.nodes.source_search_node import source_search_node
 from src.agents.nodes.structured_extraction_node import structured_extraction_node
 from src.agents.nodes.storage_node import storage_node
+from src.agents.nodes.coverage_analysis_node import coverage_analysis_node
+from src.agents.nodes.enrichment_planner_node import enrichment_planner_node
 from src.agents.nodes.validation_node import validation_node
 from src.schemas.models import ApprovedDatasetSchema, DraftDatasetSchema
 from src.state.state import AgentState
@@ -70,6 +72,15 @@ def _processing_route(state: AgentState) -> str:
 
 def _checkpoint_processing_route(state: AgentState) -> str:
     return "chunking" if state.get("approved_dataset_schema") else "classification"
+
+
+def _enrichment_route(state: AgentState) -> str:
+    loop = state.get("config", {}).get("research_loop", {})
+    if not isinstance(loop, dict) or not loop.get("enabled"):
+        return "checkpoint_export"
+    max_rounds = int(loop.get("max_rounds", 4))
+    has_tasks = any(task.get("status") == "pending" for task in state.get("research_tasks", []))
+    return "source_search" if has_tasks and int(state.get("enrichment_round", 0)) < max_rounds else "checkpoint_export"
 
 
 def _next_or_end(next_node: str):
@@ -122,6 +133,8 @@ class DatasetGenerationPipeline:
         workflow.add_node("export", export_node)
         workflow.add_node("manifest", manifest_node)
         workflow.add_node("storage", storage_node)
+        workflow.add_node("coverage_analysis", coverage_analysis_node)
+        workflow.add_node("enrichment_planner", enrichment_planner_node)
         workflow.add_node("checkpoint_sources", checkpoint_node("sources"))
         workflow.add_node("checkpoint_acquisition", checkpoint_node("acquisition"))
         workflow.add_node("checkpoint_processing", checkpoint_node("processing"))
@@ -171,7 +184,9 @@ class DatasetGenerationPipeline:
         workflow.add_conditional_edges("checkpoint_validation", _next_or_end("deduplication"), {"deduplication": "deduplication", END: END})
         workflow.add_conditional_edges("deduplication", _next_or_end("export"), {"export": "export", END: END})
         workflow.add_edge("export", "storage")
-        workflow.add_conditional_edges("storage", _next_or_end("checkpoint_export"), {"checkpoint_export": "checkpoint_export", END: END})
+        workflow.add_conditional_edges("storage", _next_or_end("coverage_analysis"), {"coverage_analysis": "coverage_analysis", END: END})
+        workflow.add_conditional_edges("coverage_analysis", _next_or_end("enrichment_planner"), {"enrichment_planner": "enrichment_planner", END: END})
+        workflow.add_conditional_edges("enrichment_planner", _enrichment_route, {"source_search": "source_search", "checkpoint_export": "checkpoint_export", END: END})
         workflow.add_edge("checkpoint_export", "manifest")
         workflow.add_edge("manifest", END)
         self._graph = workflow.compile()

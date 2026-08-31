@@ -29,7 +29,7 @@ def _strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
             ]
         else:
             normalized[key] = value
-    if normalized.get("type") == "object" or "properties" in normalized:
+    if (normalized.get("type") == "object" or "properties" in normalized) and isinstance(normalized.get("properties"), dict):
         properties = normalized.get("properties", {})
         normalized["additionalProperties"] = False
         normalized["required"] = list(properties)
@@ -59,6 +59,11 @@ def _strict_output_is_unsupported(error: Exception) -> bool:
         "unsupported", "not supported", "does not support", "unavailable",
     ))
     return output_marker and unsupported_marker
+
+
+def _provider_rejects_generated_schema(error: Exception) -> bool:
+    message = str(error).casefold()
+    return "invalid json schema for response_format" in message
 
 
 class GroqStructuredProvider:
@@ -92,7 +97,7 @@ class GroqStructuredProvider:
     ) -> OutputModel:
         if self.output_mode == "json_object":
             return self._client.complete_json(
-                system_prompt, user_prompt, output_model,
+                system_prompt, user_prompt + "\nUse the exact evidence object key `evidence_text` (never `exact_evidence_text`). Return one valid JSON object matching the requested schema.", output_model,
                 response_format={"type": "json_object"},
             )
 
@@ -104,9 +109,11 @@ class GroqStructuredProvider:
                 response_format=_schema_response_format(output_model, task_name),
             )
         except Exception as error:
-            if self.output_mode != "auto" or not _strict_output_is_unsupported(error):
+            if self.output_mode != "auto" or not (_strict_output_is_unsupported(error) or _provider_rejects_generated_schema(error)):
                 raise
             return self._client.complete_json(
-                system_prompt, user_prompt, output_model,
+                system_prompt,
+                user_prompt + "\nUse the exact evidence object key `evidence_text` (never `exact_evidence_text`). Return one valid JSON object matching the requested schema.",
+                output_model,
                 response_format={"type": "json_object"},
             )

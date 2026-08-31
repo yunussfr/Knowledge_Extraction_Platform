@@ -42,7 +42,8 @@ def persist_pipeline_state(state: dict[str, Any]) -> dict[str, Any]:
     factory = create_session_factory(config)
     dataset_name = str(state.get("dataset_name") or state.get("domain") or "dataset")
     manifest = dict(state.get("run_manifest") or {})
-    run_key = str(storage.get("run_key") or manifest.get("created_at") or "")
+    prior_storage = dict(state.get("storage_metrics") or {})
+    run_key = str(storage.get("run_key") or prior_storage.get("run_key") or manifest.get("created_at") or "")
     if not run_key:
         material = json.dumps({"dataset": dataset_name, "config": config}, ensure_ascii=False, sort_keys=True, default=str)
         run_key = hashlib.sha256(material.encode("utf-8")).hexdigest()
@@ -150,6 +151,7 @@ def persist_pipeline_state(state: dict[str, Any]) -> dict[str, Any]:
 
         persisted_records = 0
         persisted_evidence = 0
+        dataset_record_by_local_id: dict[str, DatasetRecord] = {}
         for raw_record in records:
             meta = _metadata(raw_record)
             record_id = str(raw_record.get("local_record_id") or meta.get("local_record_id") or hashlib.sha256(json.dumps(raw_record.get("data", {}), sort_keys=True, default=str).encode()).hexdigest())
@@ -164,6 +166,7 @@ def persist_pipeline_state(state: dict[str, Any]) -> dict[str, Any]:
                 session.add(record)
                 session.flush()
                 persisted_records += 1
+            dataset_record_by_local_id[record_id] = record
             for field_name, refs in (meta.get("field_evidence") or {}).items():
                 for ref in refs if isinstance(refs, list) else []:
                     evidence_text = str(ref.get("evidence_text", ""))
@@ -177,4 +180,16 @@ def persist_pipeline_state(state: dict[str, Any]) -> dict[str, Any]:
                     session.add(Evidence(record_id=record.id, field_name=str(field_name), source_id=source.id, document_id=document_by_url.get(source_url).id if document_by_url.get(source_url) else None, chunk_id=str(ref.get("chunk_id", "")), evidence_text=evidence_text, confidence=None))
                     persisted_evidence += 1
 
-    return {"dataset": dataset_name, "run_key": run_key, "sources": len(source_by_url), "documents": len(document_by_url), "chunks": len(chunk_by_key), "records_inserted": persisted_records, "evidence_inserted": persisted_evidence}
+        knowledge_metrics = {"entities_created": 0, "facts_created": 0, "relations_created": 0, "knowledge_evidence_created": 0, "identity_conflicts": 0, "record_entity_links_created": 0}
+        if records:
+            from src.knowledge.knowledge_writer import write_knowledge_records
+            knowledge_metrics = write_knowledge_records(
+                session,
+                records,
+                schema,
+                source_by_url,
+                document_by_url,
+                dataset_record_by_local_id,
+            )
+
+    return {"dataset": dataset_name, "run_key": run_key, "sources": len(source_by_url), "documents": len(document_by_url), "chunks": len(chunk_by_key), "records_inserted": persisted_records, "evidence_inserted": persisted_evidence, **knowledge_metrics}

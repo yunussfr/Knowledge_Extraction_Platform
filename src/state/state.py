@@ -80,6 +80,12 @@ class AgentState(TypedDict):
     run_metrics: Dict[str, Any]
     run_manifest: Dict[str, Any]
     storage_metrics: Dict[str, Any]
+    coverage_metrics: Dict[str, Any]
+    coverage_states: List[Dict[str, Any]]
+    research_tasks: List[Dict[str, Any]]
+    enrichment_queries: List[str]
+    enrichment_metrics: Dict[str, Any]
+    enrichment_round: int
     manifest_path: str
     checkpoint_stage: str
     checkpoint_path: str
@@ -158,6 +164,12 @@ def create_initial_state(domain: str, config: Dict[str, Any]) -> AgentState:
         "run_metrics": {},
         "run_manifest": {},
         "storage_metrics": {},
+        "coverage_metrics": {},
+        "coverage_states": [],
+        "research_tasks": [],
+        "enrichment_queries": [],
+        "enrichment_metrics": {},
+        "enrichment_round": 0,
         "manifest_path": "",
         "checkpoint_stage": "",
         "checkpoint_path": "",

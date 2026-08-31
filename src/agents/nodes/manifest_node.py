@@ -84,15 +84,60 @@ def _extraction_metrics(state: AgentState) -> dict[str, Any]:
     records_per_chunk = [
         len(batch.get("records", [])) for batch in batches
     ]
+    records_per_source: Counter[str] = Counter()
+    source_record_items: dict[str, list[dict[str, Any]]] = {}
+    for batch in batches:
+        batch_source = str(batch.get("source_url", ""))
+        for record in batch.get("records", []):
+            source_url = str(record.get("source_url") or batch_source)
+            records_per_source[source_url] += 1
+            source_record_items.setdefault(source_url, []).append(record)
     evidence = state.get("evidence_validation_metrics", {})
     quality = state.get("quality_gate_metrics", {})
     dedup = state.get("deduplication_metrics", {})
     stage_counts = dedup.get("stage_counts", {})
+    accepted_by_source: Counter[str] = Counter()
+    for record in state.get("accepted_records", []):
+        metadata = dict(record.get("_metadata", {}))
+        source_url = str(metadata.get("source_url") or record.get("source_url") or "")
+        if source_url:
+            accepted_by_source[source_url] += 1
+    fields_by_source: Counter[str] = Counter()
+    for source_url, records in source_record_items.items():
+        fields_by_source[source_url] = sum(
+            sum(value not in (None, "", [], {}) for value in dict(record.get("data", {})).values())
+            for record in records
+        )
+    supported_fields_by_source: Counter[str] = Counter()
+    for record in state.get("verified_records", []):
+        raw_record = record.get("record", record)
+        source_url = str(raw_record.get("source_url", ""))
+        supported_fields_by_source[source_url] += sum(
+            item.get("status") == "SUPPORTED"
+            for item in (record.get("field_validations") or {}).values()
+        )
+    source_word_counts = {
+        str(item.get("source", "")): int(item.get("word_count", 0) or item.get("metadata", {}).get("word_count", 0) or 0)
+        for item in state.get("processed_data", [])
+        if item.get("source")
+    }
+    knowledge_yield = {
+        source_url: {
+            "source_word_count": source_word_counts.get(source_url, 0),
+            "records_extracted": records_per_source[source_url],
+            "fields_populated": fields_by_source[source_url],
+            "supported_fields": supported_fields_by_source[source_url],
+            "accepted_records": accepted_by_source[source_url],
+        }
+        for source_url in sorted(source_record_items)
+    }
     return {
         "deterministic_extractions": sum(not bool(route.get("model_call_required")) for route in routes),
         "semantic_extractions": sum(bool(route.get("model_call_required")) for route in routes),
         "records_extracted": sum(records_per_chunk),
         "records_per_chunk": records_per_chunk,
+        "records_per_source": dict(sorted(records_per_source.items())),
+        "knowledge_yield": knowledge_yield,
         "schema_valid_records": len(state.get("validated_data", [])),
         "supported_fields": evidence.get("supported_fields", evidence.get("evidenced_fields", 0)),
         "unsupported_fields": evidence.get("unsupported_fields", 0),
