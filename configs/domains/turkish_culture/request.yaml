@@ -11,8 +11,10 @@ research:
   queries: []
 
 sources:
-  seed_urls:[]
-  preferred_domains:[]
+  seed_urls:
+    - https://www.malatya.gov.tr/yoresel-yemekler
+  preferred_domains:
+    - kulturportali.gov.tr
 
   # Optional hard controls. Omit them to apply no allowlist/blocklist.
   # allowed_domains:

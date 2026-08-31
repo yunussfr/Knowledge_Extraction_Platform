@@ -35,6 +35,7 @@ from src.agents.nodes.site_exploration_node import site_exploration_node
 from src.agents.nodes.source_selector_node import source_selector_node
 from src.agents.nodes.source_search_node import source_search_node
 from src.agents.nodes.structured_extraction_node import structured_extraction_node
+from src.agents.nodes.storage_node import storage_node
 from src.agents.nodes.validation_node import validation_node
 from src.schemas.models import ApprovedDatasetSchema, DraftDatasetSchema
 from src.state.state import AgentState
@@ -120,6 +121,7 @@ class DatasetGenerationPipeline:
         workflow.add_node("validation", validation_node)
         workflow.add_node("export", export_node)
         workflow.add_node("manifest", manifest_node)
+        workflow.add_node("storage", storage_node)
         workflow.add_node("checkpoint_sources", checkpoint_node("sources"))
         workflow.add_node("checkpoint_acquisition", checkpoint_node("acquisition"))
         workflow.add_node("checkpoint_processing", checkpoint_node("processing"))
@@ -168,7 +170,8 @@ class DatasetGenerationPipeline:
         workflow.add_conditional_edges("validation", _next_or_end("checkpoint_validation"), {"checkpoint_validation": "checkpoint_validation", END: END})
         workflow.add_conditional_edges("checkpoint_validation", _next_or_end("deduplication"), {"deduplication": "deduplication", END: END})
         workflow.add_conditional_edges("deduplication", _next_or_end("export"), {"export": "export", END: END})
-        workflow.add_edge("export", "checkpoint_export")
+        workflow.add_edge("export", "storage")
+        workflow.add_conditional_edges("storage", _next_or_end("checkpoint_export"), {"checkpoint_export": "checkpoint_export", END: END})
         workflow.add_edge("checkpoint_export", "manifest")
         workflow.add_edge("manifest", END)
         self._graph = workflow.compile()

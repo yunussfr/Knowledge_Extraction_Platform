@@ -156,6 +156,7 @@ def build_run_metrics(state: AgentState) -> dict[str, Any]:
         "acquisition": acquisition,
         "extraction_validation": _extraction_metrics(state),
         "cost_performance": _cost_metrics(state),
+        "storage": dict(state.get("storage_metrics", {})),
     }
 
 

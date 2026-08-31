@@ -17,9 +17,11 @@ class TokenCounter:
             import tiktoken
 
             self._encoding = tiktoken.get_encoding("cl100k_base")
-        except (ImportError, ValueError):
+        except Exception:
             # Groq does not expose a model tokenizer through this project. The
             # fallback deliberately overestimates token use for safe chunking.
+            # This also keeps offline runs working when tiktoken is installed
+            # but its encoding cache cannot be downloaded.
             self._encoding = None
 
     def count(self, text: str) -> int:

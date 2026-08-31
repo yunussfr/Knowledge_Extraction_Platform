@@ -79,6 +79,7 @@ class AgentState(TypedDict):
     output_paths: Dict[str, str]
     run_metrics: Dict[str, Any]
     run_manifest: Dict[str, Any]
+    storage_metrics: Dict[str, Any]
     manifest_path: str
     checkpoint_stage: str
     checkpoint_path: str
@@ -156,6 +157,7 @@ def create_initial_state(domain: str, config: Dict[str, Any]) -> AgentState:
         "output_paths": {},
         "run_metrics": {},
         "run_manifest": {},
+        "storage_metrics": {},
         "manifest_path": "",
         "checkpoint_stage": "",
         "checkpoint_path": "",
