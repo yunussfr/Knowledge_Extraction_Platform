@@ -60,6 +60,26 @@ def _preview_map(items: list[dict[str, Any]]) -> dict[str, SourcePreview]:
     return previews
 
 
+def _batched_evaluator_input(
+    evaluator_input: SourceEvaluatorInput,
+    candidates: list[dict[str, Any]],
+) -> SourceEvaluatorInput:
+    """Keep one ordered candidate slice and only its matching previews."""
+    candidate_urls = {
+        _canonical_key(item.get("canonical_url") or item["url"])
+        for item in candidates
+    }
+    previews = [
+        preview
+        for preview in evaluator_input.source_previews
+        if _canonical_key(preview.get("url", "")) in candidate_urls
+    ]
+    return evaluator_input.model_copy(update={
+        "candidate_sources": candidates,
+        "source_previews": previews,
+    })
+
+
 def _canonical_key(url: str) -> str:
     try:
         return normalize_candidate_url(url)
@@ -255,24 +275,61 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         if settings.data_source_provider == "mock":
             evaluation = _mock_evaluation(state)
         else:
-            user_payload = {
-                "evaluator_input": evaluator_input.model_dump(mode="json"),
-                "required_result_field": "evaluated_sources",
-                "evaluated_source_contract": EvaluatedSource.model_json_schema(),
-            }
-            proposed = GroqClient().complete_json(
-                SOURCE_EVALUATOR_SYSTEM_PROMPT,
-                json.dumps(user_payload, ensure_ascii=False, sort_keys=True),
-                SourceEvaluationResult,
-            )
-            if not proposed.evaluated_sources:
-                raise ValueError(
-                    "SourceEvaluator returned no evaluated_sources; the policy-aware profile contract is required."
+            batch_size = settings.source_evaluation_batch_size
+            if batch_size < 1:
+                raise ValueError("SOURCE_EVALUATION_BATCH_SIZE must be at least 1.")
+            total_batches = (len(candidates) + batch_size - 1) // batch_size
+            evaluated: list[EvaluatedSource] = []
+            client = GroqClient()
+            for batch_index, start in enumerate(
+                range(0, len(candidates), batch_size),
+                start=1,
+            ):
+                batch_candidates = candidates[start:start + batch_size]
+                batch_input = _batched_evaluator_input(
+                    evaluator_input,
+                    batch_candidates,
                 )
-            evaluated = _apply_policy_to_profiles(
-                evaluator_input,
-                proposed.evaluated_sources,
-            )
+                end = start + len(batch_candidates)
+                user_payload = {
+                    "evaluation_batch_context": {
+                        "batch_number": batch_index,
+                        "total_batches": total_batches,
+                        "candidate_start_position": start + 1,
+                        "candidate_end_position": end,
+                        "total_candidates": len(candidates),
+                        "ordering": "canonical_discovery_order",
+                        "instruction": (
+                            "Evaluate exactly this ordered batch. Global selection and "
+                            "ranking occur only after every batch has been evaluated."
+                        ),
+                    },
+                    "evaluator_input": batch_input.model_dump(mode="json"),
+                    "required_result_field": "evaluated_sources",
+                    "evaluated_source_contract": EvaluatedSource.model_json_schema(),
+                }
+                logger.info(
+                    "Evaluating source batch %d/%d (candidate positions %d-%d).",
+                    batch_index,
+                    total_batches,
+                    start + 1,
+                    end,
+                )
+                proposed = client.complete_json(
+                    SOURCE_EVALUATOR_SYSTEM_PROMPT,
+                    json.dumps(user_payload, ensure_ascii=False, sort_keys=True),
+                    SourceEvaluationResult,
+                )
+                if not proposed.evaluated_sources:
+                    raise ValueError(
+                        "SourceEvaluator returned no evaluated_sources for "
+                        f"batch {batch_index}/{total_batches}; the policy-aware "
+                        "profile contract is required."
+                    )
+                evaluated.extend(_apply_policy_to_profiles(
+                    batch_input,
+                    proposed.evaluated_sources,
+                ))
             max_sources = state.get("config", {}).get("research", {}).get(
                 "max_sources",
                 len(evaluated),

@@ -116,6 +116,25 @@ def test_live_planner_user_input_serializes_absent_blocklist_as_null(monkeypatch
     assert captured["payload"]["blocked_domains"] is None
 
 
+def test_live_planner_fills_omitted_research_topic_from_dataset_topic(monkeypatch):
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        return output_model(search_queries=["attention implementation"])
+
+    original_provider = settings.data_source_provider
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    monkeypatch.setattr(
+        "src.agents.nodes.research_planner_node.GroqClient.complete_json",
+        fake_complete_json,
+    )
+    try:
+        result = research_planner_node(create_initial_state("planner", _config()))
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+
+    assert result["status"] == "research_plan_ready"
+    assert result["research_plan"]["research_topic"] == "Attention implementations"
+
+
 def test_mock_plan_is_source_type_neutral_and_deduplicates_queries():
     config = _config()
     config["research"]["queries"] = [

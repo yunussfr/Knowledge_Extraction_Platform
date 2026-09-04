@@ -267,7 +267,10 @@ class EnrichedData(BaseModel):
 
 
 class ResearchPlan(BaseModel):
-    research_topic: str = Field(validation_alias=AliasChoices("research_topic", "researchTopic"))
+    # Some JSON-object responses from Groq omit this descriptive field even
+    # though they return usable search queries. The planner fills it from the
+    # user-supplied dataset topic before the plan enters graph state.
+    research_topic: str = Field(default="", validation_alias=AliasChoices("research_topic", "researchTopic"))
     subtopics: List[str] = Field(default_factory=list, validation_alias=AliasChoices("subtopics", "subTopics"))
     search_queries: List[str] = Field(default_factory=list, validation_alias=AliasChoices("search_queries", "searchQueries"))
     preferred_source_types: List[str] = Field(default_factory=list, validation_alias=AliasChoices("preferred_source_types", "preferredSourceTypes"))
@@ -1006,4 +1009,3 @@ class MergedRecord(BaseModel):
         default_factory=list
     )
     merge_conflicts: List[Dict[str, Any]] = Field(default_factory=list)
-

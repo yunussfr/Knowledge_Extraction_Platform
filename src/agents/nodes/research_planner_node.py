@@ -63,6 +63,8 @@ def research_planner_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 sort_keys=True,
             )
             plan = GroqClient().complete_json(RESEARCH_PLANNER_SYSTEM_PROMPT, user_prompt, ResearchPlan)
+            if not plan.research_topic.strip():
+                plan.research_topic = topic
         logger.info("Research plan ready with %d search queries.", len(plan.search_queries))
         return {
             "research_plan": plan.model_dump(),

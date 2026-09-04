@@ -421,3 +421,103 @@ def test_live_boundary_rejects_omitted_or_invented_candidate_urls(monkeypatch):
 
     assert result["status"] == "failed"
     assert "unknown URL" in result["errors"][-1]["error"]
+
+
+def test_live_evaluator_batches_candidates_in_order_with_continuity_context(monkeypatch):
+    urls = [f"https://example.com/source-{index:02d}" for index in range(1, 24)]
+    registry = CandidateRegistry()
+    for index, url in enumerate(urls, start=1):
+        registry.add(url, origin=DiscoveryOrigin(method="search", query=f"q{index}"))
+
+    captured_payloads = []
+
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        payload = json.loads(user_prompt)
+        captured_payloads.append(payload)
+        batch_candidates = payload["evaluator_input"]["candidate_sources"]
+        return SourceEvaluationResult(evaluated_sources=[
+            EvaluatedSource(
+                url=candidate["url"],
+                source_profile=_deep_independent(),
+                topic_relevance_score=0.9,
+                reasons=["Batch fixture evaluation."],
+            )
+            for candidate in batch_candidates
+        ])
+
+    original_provider = settings.data_source_provider
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    monkeypatch.setattr(
+        "src.agents.nodes.source_evaluator_node.GroqClient.complete_json",
+        fake_complete_json,
+    )
+    try:
+        result = source_evaluator_node({
+            "dataset_topic": "Ordered batch evaluation",
+            "dataset_purpose": "Structured dataset",
+            "source_policy": SourcePolicy().model_dump(mode="json"),
+            "config": {"research": {"max_sources": 23}, "sources": {}},
+            "candidate_sources": registry.as_pipeline_candidates(),
+            "source_registry": registry.as_serialized(),
+            "source_previews": [_preview(url).model_dump(mode="json") for url in urls],
+            "errors": [],
+        })
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+
+    assert result["status"] == "sources_evaluated"
+    assert len(result["source_evaluations"]) == 23
+    assert [
+        len(payload["evaluator_input"]["candidate_sources"])
+        for payload in captured_payloads
+    ] == [10, 10, 3]
+    assert [
+        payload["evaluation_batch_context"]
+        for payload in captured_payloads
+    ] == [
+        {
+            "batch_number": 1,
+            "total_batches": 3,
+            "candidate_start_position": 1,
+            "candidate_end_position": 10,
+            "total_candidates": 23,
+            "ordering": "canonical_discovery_order",
+            "instruction": (
+                "Evaluate exactly this ordered batch. Global selection and "
+                "ranking occur only after every batch has been evaluated."
+            ),
+        },
+        {
+            "batch_number": 2,
+            "total_batches": 3,
+            "candidate_start_position": 11,
+            "candidate_end_position": 20,
+            "total_candidates": 23,
+            "ordering": "canonical_discovery_order",
+            "instruction": (
+                "Evaluate exactly this ordered batch. Global selection and "
+                "ranking occur only after every batch has been evaluated."
+            ),
+        },
+        {
+            "batch_number": 3,
+            "total_batches": 3,
+            "candidate_start_position": 21,
+            "candidate_end_position": 23,
+            "total_candidates": 23,
+            "ordering": "canonical_discovery_order",
+            "instruction": (
+                "Evaluate exactly this ordered batch. Global selection and "
+                "ranking occur only after every batch has been evaluated."
+            ),
+        },
+    ]
+    assert [
+        candidate["url"]
+        for payload in captured_payloads
+        for candidate in payload["evaluator_input"]["candidate_sources"]
+    ] == urls
+    assert [
+        len(payload["evaluator_input"]["source_previews"])
+        for payload in captured_payloads
+    ] == [10, 10, 3]

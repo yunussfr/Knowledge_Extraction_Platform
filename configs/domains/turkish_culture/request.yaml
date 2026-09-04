@@ -1,20 +1,20 @@
 dataset:
   name: my_dataset
-  topic: Malatyadaki halk oyun kültürü
-  purpose: Ben bir üniversite araştırma projesi için bu bilgileri edineceğim 
+  topic: Türkiyenin kültürü ,tarihi , edebiyatı ve müzik geleneği .
+  purpose: Ben bir LLM fine-tuning dataset oluşturmak istiyorum. Bu dataset, Türk kültürü, tarihi, edebiyatı, müziği, gelenekleri ve insanlarının tarihini kapsayan bilgileri içerecek. Ayrıca bu ülkenin bilinirliğini artıracak zaferler ve kültürel temelleri ile inançlarını da içerecek. Konuşma biçimleri ve davranışlarının sinerjisi de bu datasetin bir parçası olacak.
   profile: structured
 
 research:
   max_queries: 10
-  max_sources: 20
-  constraints: Only include traditional dishes with source evidence.
+  max_sources: 10
+  constraints: |
+    The sources must be authoritative and reliable, such as government websites, academic publications, and reputable news outlets.
+
   queries: []
 
 sources:
-  seed_urls:
-    - https://www.malatya.gov.tr/yoresel-yemekler
-  preferred_domains:
-    - kulturportali.gov.tr
+  seed_urls: []
+  preferred_domains: []
 
   # Optional hard controls. Omit them to apply no allowlist/blocklist.
   # allowed_domains:
@@ -23,8 +23,7 @@ sources:
   #   - spam.example
 
   source_policy:
-    desired_content:
-      - traditional_dish_evidence
+    desired_content: []
     importance:
       authority: medium
       technical_depth: low
@@ -43,7 +42,7 @@ sources:
 site_exploration:
   enabled: false
   max_seed_domains: 5
-  max_depth: 2
+  max_depth: 5
   max_pages_per_domain: 25
   same_domain_only: true
 
@@ -53,7 +52,7 @@ schema:
 extraction:
   chunking:
     enabled: true
-    target_tokens: 6000
+    target_tokens: 8000
     overlap_tokens: 300
 
 quality:

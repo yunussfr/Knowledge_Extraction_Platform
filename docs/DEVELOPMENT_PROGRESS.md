@@ -6,10 +6,28 @@
 |---|---|
 | Current Phase | Phase 27 — Current Iteration Final Acceptance |
 | Phase Status | COMPLETED |
-| Last Updated | 2026-08-22 |
+| Last Updated | 2026-09-04 |
 | Architecture Reference | docs/ARCHITECTURE.md |
 | Rules Reference | docs/RULES.md |
 | Phase Plan Reference | docs/PHASES.md |
+
+---
+
+## Post-Acceptance Reliability Updates
+
+- 2026-09-04 — SourceEvaluator live requests now process canonical candidates
+  sequentially in bounded groups of 10 (`SOURCE_EVALUATION_BATCH_SIZE`). Every
+  request carries its batch number, total batch count, global candidate range,
+  total candidate count, and canonical discovery-order marker. Matching previews
+  alone enter each request; all validated evaluations are recombined before the
+  existing deterministic policy pass and global source selection. This prevents
+  large candidate sets from producing one oversized Groq message without losing
+  candidate order or changing owner-managed prompt wording.
+- Verification: focused evaluator/preview/registry suite `46 passed`;
+  `compileall` and `git diff --check` passed. The full offline suite reached
+  `281 passed, 13 skipped, 4 failed`; all four failures are existing
+  `turkish_culture/request.yaml` fixture mismatches (empty seed/preferred-domain
+  lists and configured `max_depth: 5`), not SourceEvaluator batch regressions.
 
 ---
 

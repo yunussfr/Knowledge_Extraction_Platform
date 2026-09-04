@@ -779,6 +779,15 @@ These labels must remain extensible.
 
 The same source may legitimately score differently under different SourcePolicies.
 
+Live evaluation is performed sequentially in bounded candidate batches (10 by
+default). Each request receives only that batch's matching previews plus compact
+continuity metadata: batch number, total batches, global candidate position
+range, total candidate count, and canonical discovery ordering. Results are
+combined in original candidate order; hard-policy recomputation and final global
+selection/ranking happen only after every batch has completed. Prior batch
+payloads are not repeated, so continuity does not recreate the context-size
+problem batching is intended to prevent.
+
 Suggested result:
 
 ```python
