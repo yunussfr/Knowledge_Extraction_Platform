@@ -1,8 +1,8 @@
+<p align="center"><img src="docs/assets/knowledge-extraction-platform-brand.png" alt="Knowledge Extraction Platform gothic spider emblem connecting discovery, evaluation, schema design, extraction, enrichment, and dataset delivery" width="760"></p>
+
 # 🕸️ Knowledge Extraction Agent
 
 <p align="center"><strong>Turn the open web into evidence-backed knowledge.</strong><br>A friendly research spider for structured datasets, RAG, GraphRAG, and future knowledge applications.</p>
-
-<p align="center"><img src="docs/assets/knowledge-spider.svg" alt="A spider web connecting research, discovery, crawling, extraction, verification, and export" width="900"></p>
 
 <p align="center"><img src="https://img.shields.io/badge/status-active%20engineering-22c55e?style=flat-square" alt="Active engineering"> <img src="https://img.shields.io/badge/python-3.12-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python 3.12"> <img src="https://img.shields.io/badge/orchestration-LangGraph-7c3aed?style=flat-square" alt="LangGraph"> <img src="https://img.shields.io/badge/web-Crawl4AI-0891b2?style=flat-square" alt="Crawl4AI"></p>
 
@@ -12,18 +12,57 @@ This is not a chatbot. It is a research-to-knowledge pipeline: a domain request 
 
 <p align="center"><img src="docs/assets/pipeline-layers.svg" alt="Four architecture layers: discovery, acquisition, intelligence, and knowledge" width="900"></p>
 
+## The architecture web
+
+The platform is one connected evidence web rather than a chain of isolated agents. Every outer thread returns to the same center: source-backed knowledge with preserved provenance.
+
 ```mermaid
-flowchart LR
-    A[Domain request] --> B[Research plan] --> C[Candidate sources]
-    C --> D{Policy + quality gate} --> E[Human schema approval]
-    E --> F[Crawl4AI acquisition] --> G[Clean + chunk] --> H{Extraction router}
-    H -->|tables / rules| I[Deterministic extraction]
-    H -->|unsupported shape| J[Local model] -->|quality gate| K[Groq fallback]
-    I --> L[Evidence binding]
-    K --> L --> M[Resolve + deduplicate] --> N[(Knowledge store)]
-    N --> O[Structured JSON]
-    N --> P[RAG chunks]
-    N --> Q[Evidence-backed GraphRAG]
+%%{init: {"theme":"dark","themeVariables":{"background":"#050608","primaryColor":"#171022","primaryTextColor":"#f5ead6","primaryBorderColor":"#9b87c7","lineColor":"#8f7cad","secondaryColor":"#082226","tertiaryColor":"#2a0d16","fontFamily":"Georgia, Times New Roman, serif"}}}%%
+flowchart TB
+    REQUEST[Domain request] --> PLAN[Research plan] --> SEARCH[Firecrawl discovery]
+    SEARCH --> PREVIEW[Crawl4AI previews] --> EVALUATE[Policy-aware evaluation]
+    EVALUATE --> SELECT[Source selection] --> SCHEMA[Draft target schema]
+    SCHEMA --> APPROVAL{Human approval}
+
+    APPROVAL --> ACQUIRE[Crawl4AI acquisition] --> CLEAN[Bronze → Silver cleaning]
+    CLEAN --> CHUNK[Token-aware chunks] --> ROUTER{Extraction router}
+    ROUTER -->|tables / CSS / XPath / regex| DET[Deterministic extraction]
+    ROUTER -->|semantic text| LOCAL[Local model]
+    LOCAL -->|invalid or unsupported output| GROQ[Groq fallback]
+    DET --> EVIDENCE[Field evidence binding]
+    LOCAL --> EVIDENCE
+    GROQ --> EVIDENCE
+
+    EVIDENCE --> VERIFY{Evidence validation + quality gate}
+    VERIFY --> CORE((EVIDENCE-BACKED<br/>KNOWLEDGE))
+    CORE --> RESOLVE[Resolve + deduplicate] --> ENRICH[Entities · facts · relations]
+    ENRICH --> EXPORT[Profile export] --> STORE[(SQLite / PostgreSQL)]
+
+    STORE --> STRUCTURED[Structured JSON]
+    STORE --> RAG[RAG chunks]
+    STORE --> GRAPH[Evidence-backed GraphRAG]
+    STORE --> COVERAGE[Coverage state]
+    COVERAGE --> TASKS[Bounded enrichment tasks]
+    TASKS -. next research thread .-> SEARCH
+    STORE -. inspect .-> DASH[Future dashboard]
+
+    SELECT -. checkpoint .-> CHECKPOINTS[(Atomic checkpoints)]
+    ACQUIRE -. checkpoint .-> CHECKPOINTS
+    CHUNK -. checkpoint .-> CHECKPOINTS
+    EVIDENCE -. checkpoint .-> CHECKPOINTS
+    EXPORT -. checkpoint .-> CHECKPOINTS
+    EXPORT --> MANIFEST[Run manifest]
+
+    classDef hunt fill:#062326,stroke:#2dd4bf,color:#d9fffb,stroke-width:2px;
+    classDef intelligence fill:#1c1028,stroke:#a78bfa,color:#f4eaff,stroke-width:2px;
+    classDef blood fill:#260b12,stroke:#ef4444,color:#ffe4e6,stroke-width:2px;
+    classDef core fill:#090b10,stroke:#f0d8a8,color:#fff7e6,stroke-width:4px;
+    classDef store fill:#0c1720,stroke:#38bdf8,color:#e0f2fe,stroke-width:2px;
+    class REQUEST,PLAN,SEARCH,PREVIEW,EVALUATE,SELECT hunt;
+    class SCHEMA,APPROVAL,ACQUIRE,CLEAN,CHUNK,ROUTER,DET,LOCAL,GROQ,EVIDENCE intelligence;
+    class VERIFY,RESOLVE,ENRICH,EXPORT blood;
+    class CORE core;
+    class STORE,STRUCTURED,RAG,GRAPH,COVERAGE,TASKS,DASH,CHECKPOINTS,MANIFEST store;
 ```
 
 ## What can you build with it?
@@ -60,6 +99,7 @@ Every “thread” has a job and a boundary:
 ## Quality is a gate, not a feeling
 
 ```mermaid
+%%{init: {"theme":"dark","themeVariables":{"background":"#050608","primaryColor":"#171022","primaryTextColor":"#f5ead6","primaryBorderColor":"#a78bfa","lineColor":"#907cad","secondaryColor":"#071f21","tertiaryColor":"#2a0d16"}}}%%
 flowchart TD
     S[Supplied source text] --> X[Candidate value] --> E{Exact evidence binding?}
     E -->|no| R[Reject or quarantine]
@@ -90,6 +130,26 @@ The implementation has moved beyond a simple scraper into a resumable knowledge 
 | **Knowledge** | Persistent sources, documents, chunks, records, entities, facts, relations, and evidence |
 | **Reliability** | Manifest metrics, atomic checkpoints, schema approval, resume, bounded retries |
 | **AI routing** | Benchmark-gated local-first path with Groq fallback when configured |
+
+## The persistence web
+
+The database is not the orchestrator and never owns crawler or model clients. LangGraph passes JSON-safe state into `storage_node`; `PipelineRepository` maps that state through SQLAlchemy to the configured database while checkpoints and manifests remain explicit resumable artifacts.
+
+<p align="center"><img src="docs/assets/gothic-persistence-web.svg" alt="Gothic persistence web connecting LangGraph state, SQLAlchemy, SQLite, PostgreSQL, evidence tables, outputs, checkpoints, manifests, coverage, and dashboard views" width="1000"></p>
+
+```text
+DATABASE_URL absent
+    → sqlite:///knowledge/knowledge.db
+
+storage.database_url or DATABASE_URL configured
+    → PostgreSQL for production deployments
+
+Both backends preserve
+    → datasets · runs · sources · documents · chunks
+    → records · field evidence · entities · facts · relations · coverage
+```
+
+SQLite is the zero-configuration local default. PostgreSQL uses the same repository contract, PostgreSQL-native JSONB variants, and Alembic migrations for production evolution. Database sessions stay inside `src/storage/`; only serializable identifiers, counts, and metrics return to graph state.
 
 ### Recent milestones
 
@@ -122,6 +182,7 @@ The harness makes model or provider changes visible. It does not imply that ever
 The terminal runner is the current presentation layer. A future dashboard will sit on the same serializable `AgentState` and checkpoint contracts, so the UI can visualize a run without rewriting the pipeline:
 
 ```mermaid
+%%{init: {"theme":"dark","themeVariables":{"background":"#050608","primaryColor":"#171022","primaryTextColor":"#f5ead6","primaryBorderColor":"#a78bfa","lineColor":"#907cad","secondaryColor":"#071f21","tertiaryColor":"#2a0d16"}}}%%
 flowchart LR
     R[Research run] --> G[Source web]
     R --> C[Coverage heatmap]
@@ -162,6 +223,7 @@ Create a new domain by copying `configs/domains/turkish_culture/request.yaml` in
 ## Run modes and outputs
 
 ```mermaid
+%%{init: {"theme":"dark","themeVariables":{"background":"#050608","primaryColor":"#171022","primaryTextColor":"#f5ead6","primaryBorderColor":"#a78bfa","lineColor":"#907cad","secondaryColor":"#071f21","tertiaryColor":"#2a0d16"}}}%%
 flowchart LR
     A[request.yaml] --> B{DATA_SOURCE_PROVIDER}
     B -->|mock| C[offline fixtures]

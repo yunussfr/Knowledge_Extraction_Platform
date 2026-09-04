@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 860" role="img" aria-labelledby="title desc">
+  <title id="title">Gothic persistence web for the Knowledge Extraction Platform</title>
+  <desc id="desc">A spider-web architecture connecting LangGraph state, storage node, repository, SQLAlchemy, SQLite, PostgreSQL, evidence tables, outputs, checkpoints, manifests, coverage, and a future dashboard.</desc>
+  <defs>
+    <radialGradient id="background" cx="50%" cy="48%" r="72%">
+      <stop offset="0" stop-color="#261239"/>
+      <stop offset=".47" stop-color="#0c1720"/>
+      <stop offset="1" stop-color="#020304"/>
+    </radialGradient>
+    <linearGradient id="core" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1ae1d0"/>
+      <stop offset=".5" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#ef4444"/>
+    </linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#fff7df"/>
+      <stop offset=".35" stop-color="#9ca3af"/>
+      <stop offset=".7" stop-color="#40364f"/>
+      <stop offset="1" stop-color="#e8d8b7"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10Z" fill="#d8c8ff"/>
+    </marker>
+  </defs>
+
+  <rect width="1400" height="860" rx="30" fill="url(#background)"/>
+  <path d="M28 124L74 78L134 75L171 28M1229 28L1266 75L1326 78L1372 124M28 736L74 782L134 785L171 832M1229 832L1266 785L1326 782L1372 736" fill="none" stroke="url(#steel)" stroke-width="3" opacity=".75"/>
+
+  <g fill="none" stroke="#b9a6d9" stroke-opacity=".24" stroke-width="1.5">
+    <ellipse cx="700" cy="430" rx="170" ry="112"/>
+    <ellipse cx="700" cy="430" rx="330" ry="218"/>
+    <ellipse cx="700" cy="430" rx="520" ry="340"/>
+    <path d="M700 70V790M180 430H1220M248 178L1152 682M248 682L1152 178M420 104L980 756M420 756L980 104"/>
+    <path d="M180 430Q350 270 370 212Q520 180 700 212Q880 180 1030 212Q1050 270 1220 430"/>
+    <path d="M180 430Q350 590 370 648Q520 680 700 648Q880 680 1030 648Q1050 590 1220 430"/>
+  </g>
+
+  <g fill="none" stroke="#c9b8ea" stroke-width="2.4" marker-end="url(#arrow)" opacity=".92">
+    <path d="M700 150V247"/>
+    <path d="M700 323V350"/>
+    <path d="M610 430H520"/>
+    <path d="M790 430H880"/>
+    <path d="M700 510V593"/>
+    <path d="M610 468L332 635"/>
+    <path d="M790 468L1068 635"/>
+    <path d="M610 390L334 226"/>
+    <path d="M790 390L1066 226"/>
+  </g>
+
+  <g font-family="Georgia, 'Times New Roman', serif" text-anchor="middle">
+    <g>
+      <path d="M520 68H880L910 98L880 158H520L490 98Z" fill="#0a1118" stroke="url(#steel)" stroke-width="2.5"/>
+      <text x="700" y="101" fill="#f4ead7" font-size="24" letter-spacing="3">LANGGRAPH STATE</text>
+      <text x="700" y="130" fill="#9edfd7" font-size="15" letter-spacing="1">JSON-SAFE PIPELINE DATA</text>
+    </g>
+
+    <g>
+      <path d="M565 245L700 205L835 245L810 325H590Z" fill="#10131d" stroke="#8ee7df" stroke-width="2.5"/>
+      <text x="700" y="267" fill="#f6f0e8" font-size="24" letter-spacing="2">STORAGE NODE</text>
+      <text x="700" y="298" fill="#8ee7df" font-size="15">serializable state boundary</text>
+    </g>
+
+    <g>
+      <circle cx="700" cy="430" r="92" fill="#070a0f" stroke="url(#core)" stroke-width="5"/>
+      <ellipse cx="700" cy="388" rx="55" ry="17" fill="#1c2630" stroke="#f5e9cf" stroke-width="2"/>
+      <path d="M645 388V463C645 473 670 481 700 481S755 473 755 463V388M645 425C645 435 670 443 700 443S755 435 755 425" fill="none" stroke="#f5e9cf" stroke-width="2"/>
+      <text x="700" y="365" fill="#d8fff9" font-size="13" letter-spacing="2">PIPELINE REPO</text>
+      <text x="700" y="461" fill="#f4e8d0" font-size="18" letter-spacing="2">SQLALCHEMY</text>
+    </g>
+
+    <g>
+      <path d="M235 350H492L520 430L492 510H235L205 430Z" fill="#071b1d" stroke="#2dd4bf" stroke-width="2.5"/>
+      <text x="365" y="408" fill="#c9fff6" font-size="25" letter-spacing="2">SQLITE</text>
+      <text x="365" y="439" fill="#8ee7df" font-size="15">local default</text>
+      <text x="365" y="467" fill="#b6c6c8" font-size="14">knowledge/knowledge.db</text>
+    </g>
+
+    <g>
+      <path d="M908 350H1165L1195 430L1165 510H908L880 430Z" fill="#1f0b13" stroke="#fb7185" stroke-width="2.5"/>
+      <text x="1035" y="408" fill="#ffe1e7" font-size="25" letter-spacing="2">POSTGRESQL</text>
+      <text x="1035" y="439" fill="#fb9aaa" font-size="15">production target</text>
+      <text x="1035" y="467" fill="#d3bdc3" font-size="14">JSONB + Alembic migrations</text>
+    </g>
+
+    <g>
+      <path d="M505 592H895L930 636L895 704H505L470 636Z" fill="#120d1d" stroke="#a78bfa" stroke-width="2.5"/>
+      <text x="700" y="625" fill="#f3ebff" font-size="22" letter-spacing="2">KNOWLEDGE TABLES</text>
+      <text x="700" y="657" fill="#c4b5fd" font-size="15">datasets · runs · sources · documents · chunks</text>
+      <text x="700" y="683" fill="#c4b5fd" font-size="15">records · evidence · entities · facts · relations · coverage</text>
+    </g>
+
+    <g>
+      <path d="M100 140H370L395 180L370 250H100L75 180Z" fill="#07181a" stroke="#38d6cc" stroke-width="2"/>
+      <text x="235" y="174" fill="#d7fffa" font-size="20" letter-spacing="2">CHECKPOINTS</text>
+      <text x="235" y="205" fill="#92dcd6" font-size="14">atomic JSON · resume</text>
+      <text x="235" y="229" fill="#9fb2b4" font-size="13">outside active DB sessions</text>
+    </g>
+
+    <g>
+      <path d="M1030 140H1300L1325 180L1300 250H1030L1005 180Z" fill="#18101f" stroke="#c084fc" stroke-width="2"/>
+      <text x="1165" y="174" fill="#f4e6ff" font-size="20" letter-spacing="2">RUN MANIFEST</text>
+      <text x="1165" y="205" fill="#d8b4fe" font-size="14">metrics · provenance</text>
+      <text x="1165" y="229" fill="#b9a9c1" font-size="13">cost · routing · coverage</text>
+    </g>
+
+    <g>
+      <path d="M92 610H365L395 650L365 724H92L64 650Z" fill="#06151b" stroke="#38bdf8" stroke-width="2"/>
+      <text x="230" y="642" fill="#dff6ff" font-size="20" letter-spacing="2">OUTPUT PROFILES</text>
+      <text x="230" y="674" fill="#9bdaf6" font-size="15">Structured JSON</text>
+      <text x="230" y="699" fill="#9bdaf6" font-size="15">RAG · GraphRAG</text>
+    </g>
+
+    <g>
+      <path d="M1035 610H1308L1336 650L1308 724H1035L1005 650Z" fill="#1b0b0d" stroke="#ef4444" stroke-width="2"/>
+      <text x="1170" y="642" fill="#ffe2e2" font-size="20" letter-spacing="2">KNOWLEDGE VIEWS</text>
+      <text x="1170" y="674" fill="#f4a4a4" font-size="15">coverage analysis</text>
+      <text x="1170" y="699" fill="#f4a4a4" font-size="15">future dashboard</text>
+    </g>
+  </g>
+
+</svg>

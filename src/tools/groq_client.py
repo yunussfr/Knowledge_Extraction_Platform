@@ -1,13 +1,18 @@
 """Reusable Groq structured-output client."""
 
+from __future__ import annotations
+
 import json
 from time import sleep
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel
 
 from src.core.retry import is_retryable_provider_error
 from src.core.settings import settings
+
+if TYPE_CHECKING:
+    from groq.types.chat.completion_create_params import ResponseFormat
 
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
@@ -20,7 +25,7 @@ class GroqClient:
         user_prompt: str,
         output_model: type[OutputModel],
         *,
-        response_format: dict[str, Any] | None = None,
+        response_format: ResponseFormat | None = None,
     ) -> OutputModel:
         if not settings.groq_api_key:
             raise RuntimeError("GROQ_API_KEY is required when DATA_SOURCE_PROVIDER is firecrawl")
@@ -34,6 +39,9 @@ class GroqClient:
         last_error: Exception | None = None
         for attempt in range(settings.groq_max_retries + 1):
             try:
+                effective_response_format: ResponseFormat = (
+                    response_format or {"type": "json_object"}
+                )
                 response = client.chat.completions.create(
                     model=settings.groq_model,
                     temperature=settings.groq_temperature,
@@ -41,7 +49,7 @@ class GroqClient:
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt},
                     ],
-                    response_format=response_format or {"type": "json_object"},
+                    response_format=effective_response_format,
                 )
                 content = response.choices[0].message.content or "{}"
                 return output_model.model_validate(json.loads(content))

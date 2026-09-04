@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import re
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel
 
 from src.core.settings import settings
 from src.tools.groq_client import GroqClient
+
+if TYPE_CHECKING:
+    from groq.types.chat.completion_create_params import (
+        ResponseFormatResponseFormatJsonSchema,
+        ResponseFormatResponseFormatJsonSchemaJsonSchema,
+    )
 
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
@@ -38,15 +44,16 @@ def _strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
 
 def _schema_response_format(
     output_model: type[BaseModel], task_name: str
-) -> dict[str, Any]:
+) -> ResponseFormatResponseFormatJsonSchema:
     schema_name = re.sub(r"[^A-Za-z0-9_-]+", "_", task_name).strip("_")
+    json_schema: ResponseFormatResponseFormatJsonSchemaJsonSchema = {
+        "name": schema_name or "structured_generation",
+        "strict": True,
+        "schema": _strict_schema(output_model.model_json_schema()),
+    }
     return {
         "type": "json_schema",
-        "json_schema": {
-            "name": schema_name or "structured_generation",
-            "strict": True,
-            "schema": _strict_schema(output_model.model_json_schema()),
-        },
+        "json_schema": json_schema,
     }
 
 

@@ -28,6 +28,25 @@
   `281 passed, 13 skipped, 4 failed`; all four failures are existing
   `turkish_culture/request.yaml` fixture mismatches (empty seed/preferred-domain
   lists and configured `max_depth: 5`), not SourceEvaluator batch regressions.
+- 2026-09-04 — The reusable Groq adapter now types `response_format` with the
+  Groq 1.6.0 SDK `ResponseFormat` contract instead of unconstrained
+  `dict[str, Any]`. The strict-schema builder returns the matching SDK
+  `TypedDict`, while imports remain type-check-only so mock/offline module
+  loading stays lazy. Runtime JSON parsing and Pydantic output validation are
+  unchanged. Focused provider tests passed (`10 passed, 1 deselected`),
+  `compileall` and `git diff --check` passed, and the installed VS Code
+  Pylance/Pyright engine reported no issues for both changed Groq files.
+- 2026-09-04 — README visual identity and architecture presentation were
+  refreshed around the owner-supplied gothic spider emblem. A unified Mermaid
+  architecture web now connects discovery, preview, evaluation, schema
+  approval, acquisition, extraction routing, evidence gates, persistence,
+  output profiles, coverage, enrichment, checkpoints, manifests, and the
+  future dashboard. A new persistence-web SVG documents the actual
+  `storage_node -> PipelineRepository -> SQLAlchemy -> SQLite/PostgreSQL`
+  boundary and the persisted knowledge families. All four Mermaid blocks use
+  one dark gothic theme. Local image links, Mermaid init JSON, SVG XML, and the
+  browser-rendered persistence graphic were verified; no runtime behavior was
+  changed.
 
 ---
 

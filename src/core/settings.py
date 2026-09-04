@@ -54,7 +54,7 @@ class Settings:
     groq_temperature: float = _float("GROQ_TEMPERATURE", 0.0)
     groq_request_timeout: int = _integer("GROQ_REQUEST_TIMEOUT", 60)
     groq_max_retries: int = _integer("GROQ_MAX_RETRIES", 2)
-    source_evaluation_batch_size: int = _integer("SOURCE_EVALUATION_BATCH_SIZE", 10)
+    source_evaluation_batch_size: int = _integer("SOURCE_EVALUATION_BATCH_SIZE", 2 )
     groq_structured_output_mode: str = os.getenv(
         "GROQ_STRUCTURED_OUTPUT_MODE", "auto"
     ).strip().lower()
