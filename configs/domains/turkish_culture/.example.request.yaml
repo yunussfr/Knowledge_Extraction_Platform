@@ -1,0 +1,74 @@
+dataset:
+  # Üretilecek dataset dosyasının temel kimliği.
+  name: turkish_culture_dataset
+  # Araştırmanın ana konusu. Planner bu bilgiyi arama sorgularını üretirken kullanır.
+  topic: Turkish culture, history, literature, music, traditions, beliefs, and victories
+  # Datasetin hangi amaçla kullanılacağını açıklayın; bu bilgi kaynak seçimini etkiler.
+  purpose: Evidence-backed records for RAG and knowledge-base systems.
+  # structured, rag veya graphrag seçeneklerinden biri kullanılabilir.
+  profile: structured
+
+research:
+  # true: queries sayısı kadar sorguyu yapay zekâ üretir.
+  # false: otomatik planner davranışı kullanılmaz; yine de queries bir sayı olmalıdır.
+  auto_generate_queries: true
+  # Yapay zekânın tam olarak üretmesi gereken benzersiz arama sorgusu sayısı.
+  queries: 10
+  # Her sorgu için discovery provider tarafından istenebilecek azami kaynak sayısı.
+  # Aynı URL'ler sistem tarafından daha sonra tekilleştirilir.
+  max_sources: 20
+  # Planner'a ek araştırma kısıtları veya güvenilirlik beklentileri yazılabilir.
+  constraints: ""
+
+schema:
+  # true ise approved schema yoksa pipeline kullanıcı onayında bekler.
+  auto_design: true
+  require_user_approval: true
+
+sources:
+  # Başlangıçta mutlaka kullanılmasını istediğiniz URL'ler.
+  # Boş bırakmak serbesttir; bunlar allowlist değildir.
+  seed_urls: []
+  # Tercih edilen domainlerdir; zorunlu kısıt değildir.
+  preferred_domains: []
+  # İsteğe bağlı sert domain kuralları. Yazılmazsa domain kısıtlaması uygulanmaz.
+  # allowed_domains:
+  #   - kulturportali.gov.tr
+  # blocked_domains:
+  #   - spam.example
+  # Kaynak türü ve içerik tercihlerinin isteğe bağlı policy alanı.
+  source_policy:
+    desired_content: []
+    importance:
+      authority: high
+      technical_depth: low
+      information_density: high
+      recency: low
+      extractability: high
+    # İsterseniz örneğin government, academic, museum gibi türleri belirtebilirsiniz.
+    # preferred_source_types:
+    #   - government
+    #   - academic
+    # allowed_source_types:
+    #   - government
+    # blocked_source_types:
+    #   - social_media
+
+extraction:
+  chunking:
+    # Uzun sayfalar parçalara bölünsün mü?
+    enabled: true
+    # Chunk hedef büyüklüğü token cinsindendir.
+    target_tokens: 6000
+    # Ardışık chunklar arasında tekrar edilecek token miktarı.
+    overlap_tokens: 300
+
+quality:
+  # Kabul edilecek minimum kayıt güven skoru.
+  minimum_confidence: 0.70
+  # Eşik altındaki kayıtlar için reject veya review kullanılabilir.
+  low_confidence_action: reject
+
+output:
+  # Çıktı formatı: json veya jsonl.
+  format: json

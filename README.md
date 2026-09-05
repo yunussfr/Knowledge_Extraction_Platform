@@ -162,20 +162,7 @@ SQLite is the zero-configuration local default. PostgreSQL uses the same reposit
 🚧 Next      Dashboard, larger real-world gold sets, and benchmark expansion
 ```
 
-### Benchmark snapshot
 
-The current routed extraction benchmark is an offline/frozen engineering comparison, not a live-web quality promise.
-
-| Metric | Routed local-first | Groq-only comparison |
-| --- | ---: | ---: |
-| Record recall | 0.9167 | 0.8333 |
-| Field precision | 0.9697 | 0.7586 |
-| Field recall | 0.9143 | 0.6286 |
-| Unsupported accepted fields | 0.0000 | 0.0000 |
-| Schema validity | 1.0000 | — |
-| Cloud fallback rate | 0.25 | — |
-
-The harness makes model or provider changes visible. It does not imply that every domain, language, website, or live provider will produce the same result.
 
 ## Future dashboard: from terminal spider to research cockpit
 
@@ -219,6 +206,32 @@ For the human-in-the-loop flow, remove `--approve-schema`. Review `knowledge/rev
 Other example domain: `space_science`.
 
 Create a new domain by copying `configs/domains/turkish_culture/request.yaml` into `configs/domains/<your_domain>/request.yaml` and changing the topic, purpose, source policy, schema, and output settings. The `--domain` value is the directory name under `configs/domains/`.
+
+### Configure a knowledge base
+
+Each person or project must enter the configuration of the knowledge base they want to create in a domain request file. The maintained example template is [`configs/domains/turkish_culture/.example.request.yaml`](configs/domains/turkish_culture/.example.request.yaml). Use its comments as the field guide, then copy the file to `<your_domain>/request.yaml` and replace the example values.
+
+The most important request fields are:
+
+```yaml
+dataset:
+  name: my_knowledge_base
+  topic: The subject to research
+  purpose: How the resulting knowledge base will be used
+  profile: structured        # structured, rag, or graphrag
+
+research:
+  queries: 10                # exactly how many queries the AI planner must generate
+  max_sources: 20            # maximum discovery results requested per query
+  constraints: ""            # optional reliability or scope requirements
+
+sources:
+  seed_urls: []              # optional starting URLs; not an allowlist
+  preferred_domains: []      # optional soft domain preferences
+  source_policy: {}          # optional content, authority, and source-type preferences
+```
+
+`queries` is the query count, not a list of manually written queries. `max_sources` remains the source limit for each generated query. Domain restrictions and source preferences belong under `sources`; extraction, quality, and output behavior are configured in their corresponding sections of the example template.
 
 ## Run modes and outputs
 
