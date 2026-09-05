@@ -5,12 +5,11 @@ dataset:
   profile: structured
 
 research:
-  max_queries: 10
+  queries: 10
   max_sources: 10
   constraints: |
     The sources must be authoritative and reliable, such as government websites, academic publications, and reputable news outlets.
 
-  queries: []
 
 sources:
   seed_urls: []

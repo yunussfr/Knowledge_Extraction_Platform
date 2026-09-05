@@ -120,7 +120,7 @@ def test_legacy_source_controls_are_migrated_out_of_research_deterministically()
         "research": {
             "reference_urls": ["https://seed.example/page"],
             "preferred_domains": ["preferred.example"],
-            "max_queries": 3,
+            "queries": 3,
         },
     })
 

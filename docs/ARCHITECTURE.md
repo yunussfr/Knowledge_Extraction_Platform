@@ -296,7 +296,7 @@ dataset:
 
 
 research:
-  max_queries: 10
+  queries: 10
   max_sources: 40
 
 

@@ -284,7 +284,7 @@ def test_compiled_graph_exposes_phase18_metrics_and_gold_quality_metadata(tmp_pa
             "topic": "Evidence quality",
             "purpose": "Graph integration proof",
         },
-        "research": {"max_queries": 1, "max_sources": 1},
+        "research": {"queries": 1, "max_sources": 1},
         "schema": {"require_user_approval": True},
         "quality": {"minimum_evidence_quality": 0.7},
         "output": {"format": "json", "directory": str(tmp_path)},

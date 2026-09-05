@@ -207,7 +207,7 @@ def test_long_mock_document_flows_through_chunks_merge_validation_and_export(tmp
         content = " ".join("Evidence-backed detail about traditional coffee." for _ in range(100))
         config = {
             "dataset": {"name": "long_records", "topic": "Traditional coffee", "purpose": "Test"},
-            "research": {"max_queries": 1, "max_sources": 1},
+            "research": {"queries": 1, "max_sources": 1},
             "schema": {"require_user_approval": True},
             "extraction": {"chunking": {"enabled": True, "target_tokens": 30, "overlap_tokens": 6}},
             "quality": {"minimum_confidence": 0.7},

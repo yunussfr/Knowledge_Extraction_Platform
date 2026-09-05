@@ -143,11 +143,17 @@ class DatasetRequest(BaseModel):
 class ResearchRequest(BaseModel):
     model_config = ConfigDict(extra="allow")
 
-    max_queries: int = Field(default=10, ge=1)
     max_sources: int = Field(default=20, ge=1)
     constraints: str = ""
-    queries: List[str] = Field(default_factory=list)
+    queries: int = Field(default=10, ge=1)
     auto_generate_queries: bool = True
+
+    @field_validator("queries")
+    @classmethod
+    def validate_query_count_or_list(cls, value: int) -> int:
+        if isinstance(value, bool):
+            raise ValueError("queries must be an integer query count.")
+        return value
 
 
 class SiteExplorationConfiguration(BaseModel):
@@ -212,7 +218,7 @@ class ResearchPlannerInput(BaseModel):
     preferred_domains: List[str] = Field(default_factory=list)
     allowed_domains: Optional[List[str]] = None
     blocked_domains: Optional[List[str]] = None
-    max_queries: int = Field(ge=1, default=10)
+    query_count: int = Field(ge=1, default=10)
     constraints: str = ""
 
 

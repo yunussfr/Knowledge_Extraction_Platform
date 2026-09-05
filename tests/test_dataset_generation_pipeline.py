@@ -30,7 +30,7 @@ def force_mock_provider():
 def _request_config(output_directory: str) -> dict:
     return {
         "dataset": {"name": "coffee_records", "topic": "Traditional coffee", "purpose": "Test data"},
-        "research": {"queries": ["traditional coffee"], "max_sources": 2},
+        "research": {"queries": 1, "max_sources": 2},
         "schema": {"require_user_approval": True},
         "quality": {"minimum_confidence": 0.7},
         "output": {"format": "json", "directory": output_directory},

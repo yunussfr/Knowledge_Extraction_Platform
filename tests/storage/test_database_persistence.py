@@ -83,7 +83,7 @@ def test_enabled_storage_is_reached_by_mock_pipeline(tmp_path):
     try:
         config = {
             "dataset": {"name": "stored_records", "topic": "Coffee", "purpose": "Test"},
-            "research": {"queries": ["coffee"], "max_sources": 1},
+            "research": {"queries": 1, "max_sources": 1},
             "sources": [{"url": "https://example.test/coffee", "title": "Coffee", "enabled": True}],
             "storage": {"enabled": True, "database_url": f"sqlite:///{tmp_path / 'pipeline.db'}"},
             "output": {"format": "json", "directory": str(tmp_path / "output")},

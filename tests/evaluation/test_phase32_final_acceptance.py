@@ -9,7 +9,7 @@ def test_final_mock_flow_reaches_knowledge_coverage_and_export(tmp_path):
     try:
         config = {
             "dataset": {"name": "phase32_final", "topic": "Coffee", "purpose": "Acceptance"},
-            "research": {"queries": ["coffee"], "max_sources": 2},
+            "research": {"queries": 1, "max_sources": 2},
             "mock_sources": [{"url": "https://fixture.example/coffee", "title": "Coffee", "enabled": True}],
             "storage": {"enabled": True, "database_url": f"sqlite:///{tmp_path / 'phase32.db'}"},
             "research_loop": {"enabled": True, "max_rounds": 2, "max_tasks_per_round": 5},

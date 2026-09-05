@@ -59,7 +59,6 @@ class Settings:
         "GROQ_STRUCTURED_OUTPUT_MODE", "auto"
     ).strip().lower()
     run_integration_tests: bool = _boolean("RUN_INTEGRATION_TESTS", False)
-    default_max_search_queries: int = _integer("DEFAULT_MAX_SEARCH_QUERIES", 10)
     default_max_sources: int = _integer("DEFAULT_MAX_SOURCES", 20)
     require_schema_approval: bool = _boolean("REQUIRE_SCHEMA_APPROVAL", True)
     minimum_confidence: float = _float("MINIMUM_CONFIDENCE", 0.70)

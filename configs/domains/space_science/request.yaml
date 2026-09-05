@@ -6,10 +6,9 @@ dataset:
 
 research:
   auto_generate_queries: true
-  max_queries: 10
+  queries: 10
   max_sources: 20
   constraints: ""
-  queries: []
 
 sources:
   seed_urls: []

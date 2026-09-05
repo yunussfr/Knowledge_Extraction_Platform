@@ -26,7 +26,7 @@ def _config(source_policy=None, **source_overrides):
             "topic": "Attention implementations",
             "purpose": "Technical RAG dataset",
         },
-        "research": {"max_queries": 4, "constraints": "Use source evidence.", "queries": []},
+        "research": {"queries": 4, "constraints": "Use source evidence."},
         "sources": sources,
     }
 
@@ -91,10 +91,10 @@ def test_live_planner_user_input_serializes_absent_blocklist_as_null(monkeypatch
         return ResearchPlan(
             research_topic="Attention implementations",
             subtopics=["kernels"],
-            search_queries=["attention kernel implementation"],
+            search_queries=[f"attention query {index}" for index in range(4)],
             query_families=[{
                 "name": "implementation",
-                "queries": ["attention kernel implementation"],
+                    "queries": [f"attention query {index}" for index in range(4)],
             }],
         )
 
@@ -118,7 +118,9 @@ def test_live_planner_user_input_serializes_absent_blocklist_as_null(monkeypatch
 
 def test_live_planner_fills_omitted_research_topic_from_dataset_topic(monkeypatch):
     def fake_complete_json(self, system_prompt, user_prompt, output_model):
-        return output_model(search_queries=["attention implementation"])
+        return output_model(
+            search_queries=[f"attention implementation {index}" for index in range(4)]
+        )
 
     original_provider = settings.data_source_provider
     object.__setattr__(settings, "data_source_provider", "firecrawl")
@@ -135,13 +137,52 @@ def test_live_planner_fills_omitted_research_topic_from_dataset_topic(monkeypatc
     assert result["research_plan"]["research_topic"] == "Attention implementations"
 
 
-def test_mock_plan_is_source_type_neutral_and_deduplicates_queries():
+def test_live_planner_rejects_provider_response_with_no_queries(monkeypatch):
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        return output_model()
+
+    original_provider = settings.data_source_provider
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    monkeypatch.setattr(
+        "src.agents.nodes.research_planner_node.GroqClient.complete_json",
+        fake_complete_json,
+    )
+    try:
+        result = research_planner_node(create_initial_state("planner", _config()))
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+
+    assert result["status"] == "failed"
+    assert "exactly 4 are required" in result["errors"][0]["error"]
+
+
+def test_integer_queries_config_is_the_exact_live_query_target(monkeypatch):
+    captured = {}
+
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        captured["payload"] = json.loads(user_prompt)
+        return output_model(search_queries=[f"query {index}" for index in range(4)])
+
     config = _config()
-    config["research"]["queries"] = [
-        "attention implementation",
-        " Attention Implementation ",
-        "attention benchmark",
-    ]
+    config["research"]["queries"] = 4
+    original_provider = settings.data_source_provider
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    monkeypatch.setattr(
+        "src.agents.nodes.research_planner_node.GroqClient.complete_json",
+        fake_complete_json,
+    )
+    try:
+        result = research_planner_node(create_initial_state("planner", config))
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+
+    assert result["status"] == "research_plan_ready"
+    assert captured["payload"]["query_requirements"]["exact_count"] == 4
+    assert len(result["research_plan"]["search_queries"]) == 4
+
+
+def test_mock_plan_is_source_type_neutral_and_uses_topic_query():
+    config = _config()
     original_provider = settings.data_source_provider
     object.__setattr__(settings, "data_source_provider", "mock")
     try:
@@ -149,12 +190,10 @@ def test_mock_plan_is_source_type_neutral_and_deduplicates_queries():
     finally:
         object.__setattr__(settings, "data_source_provider", original_provider)
 
-    assert result["research_plan"]["search_queries"] == [
-        "attention implementation", "attention benchmark"
-    ]
+    assert result["research_plan"]["search_queries"] == ["Attention implementations"]
     assert result["research_plan"]["preferred_source_types"] == []
     assert result["research_plan"]["query_families"][0]["queries"] == [
-        "attention implementation", "attention benchmark"
+        "Attention implementations"
     ]
 
 
