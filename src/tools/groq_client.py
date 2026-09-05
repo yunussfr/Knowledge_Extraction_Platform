@@ -42,12 +42,17 @@ class GroqClient:
                 effective_response_format: ResponseFormat = (
                     response_format or {"type": "json_object"}
                 )
+                effective_user_prompt = user_prompt
+                if effective_response_format.get("type") == "json_object":
+                    effective_user_prompt += (
+                        "\n\nReturn exactly one valid json object."
+                    )
                 response = client.chat.completions.create(
                     model=settings.groq_model,
                     temperature=settings.groq_temperature,
                     messages=[
                         {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
+                        {"role": "user", "content": effective_user_prompt},
                     ],
                     response_format=effective_response_format,
                 )
