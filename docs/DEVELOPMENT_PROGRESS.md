@@ -6,7 +6,7 @@
 |---|---|
 | Current Phase | Phase 27 — Current Iteration Final Acceptance |
 | Phase Status | COMPLETED |
-| Last Updated | 2026-09-04 |
+| Last Updated | 2026-09-05 |
 | Architecture Reference | docs/ARCHITECTURE.md |
 | Rules Reference | docs/RULES.md |
 | Phase Plan Reference | docs/PHASES.md |
@@ -15,6 +15,37 @@
 
 ## Post-Acceptance Reliability Updates
 
+- 2026-09-16 — BGE-Reranker-v2-m3 Cross-Encoder candidate pre-filtering was added
+  between `source_search` and `source_preview`. Candidates are scored against the
+  `dataset_topic` using sigmoid-normalized similarity, filtered strictly by the
+  domain request's `quality.minimum_confidence` threshold without fallback, and
+  assigned concise sequential `candidate_id` identifiers (`cand_1`, `cand_2`, ...).
+  `SourceCandidate`, `CandidateRegistry`, and `EvaluatedSource` contracts were updated
+  to support `candidate_id` mapping, eliminating omitted URL errors in local LLM source
+  evaluation. Provider abstraction supports both CUDA-accelerated cross-encoder and
+  deterministic mock fallback for offline tests.
+- Verification: focused unit tests `tests/unit/test_source_reranker.py` passed (3 passed in 0.14s),
+  and `compileall` passed without errors.
+- 2026-09-05 — SourceEvaluator now uses its own provider-neutral routing
+  boundary and can run on benchmark-approved Ollama/Gemma independently of
+  extraction routing. `gemma4:e4b-it-qat` was evaluated locally on the frozen
+  24-candidate/two-policy Phase 9 set in ordered batches of two. The accepted
+  run completed 24/24 batches with schema validity `1.0`, candidate
+  completeness `1.0`, policy alignment `0.875`, P@5 `0.90`, P@10 `0.70`,
+  useful-source recall `0.941176`, hard-policy violation rate `0.0`, and no
+  cloud fallback. The saved result is
+  `docs/baselines/source_evaluator_gemma_benchmark.json`. Local evaluator
+  output uses an evaluator-only strict schema, bounded retries, exact URL
+  coverage checks, and canonical source-type instructions. Runtime metrics
+  expose provider, model, completed batches, and local/cloud/fallback calls;
+  cloud fallback is disabled by default.
+- Verification: the real local benchmark passed every acceptance check in
+  `410.444659` seconds; the focused provider/evaluator/manifest/benchmark suite
+  passed `45` tests. The full offline regression reached `294 passed, 13
+  skipped, 4 failed`; all four failures are the already-recorded mutable
+  `turkish_culture/request.yaml` fixture mismatches (`seed_urls`,
+  `preferred_domains`, `max_depth`, and the dependent mock baseline), not
+  Gemma evaluator regressions.
 - 2026-09-04 — SourceEvaluator live requests now process canonical candidates
   sequentially in bounded groups of 10 (`SOURCE_EVALUATION_BATCH_SIZE`). Every
   request carries its batch number, total batch count, global candidate range,

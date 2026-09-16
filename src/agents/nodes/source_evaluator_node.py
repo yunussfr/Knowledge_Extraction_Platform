@@ -19,11 +19,111 @@ from src.schemas.models import (
     SourcePolicy,
     SourceProfile,
 )
-from src.tools.groq_client import GroqClient
+from src.tools.structured_generation import get_source_evaluation_provider
 from src.tools.web.models import SourcePreview
 
 
 logger = get_logger(__name__)
+
+
+def _evaluation_provider_metrics(
+    provider: Any,
+    *,
+    candidate_count: int,
+    batch_size: int,
+    total_batches: int,
+    completed_batches: int,
+) -> dict[str, Any]:
+    provider_metrics = provider.metrics() if provider is not None and hasattr(provider, "metrics") else {}
+    return {
+        **provider_metrics,
+        "candidate_count": candidate_count,
+        "batch_size": batch_size,
+        "total_batches": total_batches,
+        "completed_batches": completed_batches,
+    }
+
+
+def build_evaluation_user_payload(
+    batch_input: SourceEvaluatorInput,
+    *,
+    batch_number: int,
+    total_batches: int,
+    candidate_start_position: int,
+    candidate_end_position: int,
+    total_candidates: int,
+) -> dict[str, Any]:
+    """Build the exact bounded provider payload used at runtime and in benchmarks."""
+    return {
+        "evaluation_batch_context": {
+            "batch_number": batch_number,
+            "total_batches": total_batches,
+            "candidate_start_position": candidate_start_position,
+            "candidate_end_position": candidate_end_position,
+            "total_candidates": total_candidates,
+            "ordering": "canonical_discovery_order",
+            "instruction": (
+                "Evaluate exactly this ordered batch. Global selection and "
+                "ranking occur only after every batch has been evaluated."
+            ),
+        },
+        "evaluator_input": batch_input.model_dump(mode="json"),
+        "required_result_field": "evaluated_sources",
+        "evaluated_source_contract": EvaluatedSource.model_json_schema(),
+        "source_profile_requirements": {
+            "source_type": (
+                "Return one concise canonical lowercase label such as government, "
+                "university, academic, official_documentation, independent_technical, "
+                "news, dataset, forum, or social_media. Do not append words such as "
+                "website, source, page, or portal. When supplied evidence clearly "
+                "matches an explicit allowed_source_types label, use that exact label."
+            ),
+            "evidence_boundary": (
+                "Characterize only from the candidate metadata and preview supplied "
+                "in this batch."
+            ),
+            "candidate_id": (
+                "Include the candidate_id (e.g. cand_1) for each evaluated source "
+                "to ensure accurate mapping."
+            ),
+        },
+    }
+
+
+def generate_evaluated_batch(
+    provider: Any,
+    batch_input: SourceEvaluatorInput,
+    user_payload: dict[str, Any],
+    *,
+    task_name: str,
+    max_retries: int,
+) -> list[EvaluatedSource]:
+    """Generate and fully validate one batch with bounded local retries."""
+    if max_retries < 0:
+        raise ValueError("SourceEvaluator max_retries must be at least 0.")
+    last_error: Exception | None = None
+    for attempt in range(max_retries + 1):
+        try:
+            proposed = provider.generate(
+                system_prompt=SOURCE_EVALUATOR_SYSTEM_PROMPT,
+                user_prompt=json.dumps(
+                    user_payload, ensure_ascii=False, sort_keys=True
+                ),
+                output_model=SourceEvaluationResult,
+                task_name=f"{task_name}_attempt_{attempt + 1}",
+            )
+            if not proposed.evaluated_sources:
+                raise ValueError(
+                    "SourceEvaluator returned no evaluated_sources; the "
+                    "policy-aware profile contract is required."
+                )
+            return _apply_policy_to_profiles(
+                batch_input, proposed.evaluated_sources
+            )
+        except Exception as error:
+            last_error = error
+    assert last_error is not None
+    raise last_error
 
 
 def build_source_evaluator_input(state: Dict[str, Any]) -> SourceEvaluatorInput:
@@ -95,14 +195,29 @@ def _apply_policy_to_profiles(
         _canonical_key(item.get("canonical_url") or item["url"]): item
         for item in evaluator_input.candidate_sources
     }
+    candidate_by_id = {
+        str(item.get("candidate_id")): _canonical_key(item.get("canonical_url") or item["url"])
+        for item in evaluator_input.candidate_sources
+        if item.get("candidate_id")
+    }
     proposed_by_url: dict[str, EvaluatedSource] = {}
     for item in proposed:
-        key = _canonical_key(item.url)
-        if key not in candidates:
+        matched_key = None
+        if item.candidate_id and str(item.candidate_id) in candidate_by_id:
+            matched_key = candidate_by_id[str(item.candidate_id)]
+        elif item.url in candidate_by_id:
+            matched_key = candidate_by_id[item.url]
+        elif item.url:
+            key = _canonical_key(item.url)
+            if key in candidates:
+                matched_key = key
+
+        if not matched_key:
             raise ValueError(f"SourceEvaluator returned an unknown URL: {item.url}")
-        if key in proposed_by_url:
-            raise ValueError(f"SourceEvaluator returned a duplicate URL: {item.url}")
-        proposed_by_url[key] = item
+        if matched_key in proposed_by_url:
+            raise ValueError(f"SourceEvaluator returned a duplicate URL: {matched_key}")
+        item.url = matched_key
+        proposed_by_url[matched_key] = item
     missing = [url for url in candidates if url not in proposed_by_url]
     if missing:
         raise ValueError(
@@ -265,6 +380,10 @@ def _ensure_registry(
 
 def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate every supplied candidate from bounded evidence and explicit policy."""
+    provider = None
+    batch_size = settings.source_evaluation_batch_size
+    total_batches = 0
+    completed_batches = 0
     try:
         evaluator_input = build_source_evaluator_input(state)
         candidates = evaluator_input.candidate_sources
@@ -274,13 +393,23 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
 
         if settings.data_source_provider == "mock":
             evaluation = _mock_evaluation(state)
+            source_evaluation_metrics = {
+                "provider": "mock",
+                "model": "deterministic",
+                "candidate_count": len(candidates),
+                "batch_size": len(candidates),
+                "total_batches": 1,
+                "completed_batches": 1,
+                "local_calls": 0,
+                "cloud_calls": 0,
+                "fallback_calls": 0,
+            }
         else:
-            batch_size = settings.source_evaluation_batch_size
             if batch_size < 1:
                 raise ValueError("SOURCE_EVALUATION_BATCH_SIZE must be at least 1.")
             total_batches = (len(candidates) + batch_size - 1) // batch_size
             evaluated: list[EvaluatedSource] = []
-            client = GroqClient()
+            provider = get_source_evaluation_provider()
             for batch_index, start in enumerate(
                 range(0, len(candidates), batch_size),
                 start=1,
@@ -291,23 +420,14 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     batch_candidates,
                 )
                 end = start + len(batch_candidates)
-                user_payload = {
-                    "evaluation_batch_context": {
-                        "batch_number": batch_index,
-                        "total_batches": total_batches,
-                        "candidate_start_position": start + 1,
-                        "candidate_end_position": end,
-                        "total_candidates": len(candidates),
-                        "ordering": "canonical_discovery_order",
-                        "instruction": (
-                            "Evaluate exactly this ordered batch. Global selection and "
-                            "ranking occur only after every batch has been evaluated."
-                        ),
-                    },
-                    "evaluator_input": batch_input.model_dump(mode="json"),
-                    "required_result_field": "evaluated_sources",
-                    "evaluated_source_contract": EvaluatedSource.model_json_schema(),
-                }
+                user_payload = build_evaluation_user_payload(
+                    batch_input,
+                    batch_number=batch_index,
+                    total_batches=total_batches,
+                    candidate_start_position=start + 1,
+                    candidate_end_position=end,
+                    total_candidates=len(candidates),
+                )
                 logger.info(
                     "Evaluating source batch %d/%d (candidate positions %d-%d).",
                     batch_index,
@@ -315,26 +435,26 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     start + 1,
                     end,
                 )
-                proposed = client.complete_json(
-                    SOURCE_EVALUATOR_SYSTEM_PROMPT,
-                    json.dumps(user_payload, ensure_ascii=False, sort_keys=True),
-                    SourceEvaluationResult,
-                )
-                if not proposed.evaluated_sources:
-                    raise ValueError(
-                        "SourceEvaluator returned no evaluated_sources for "
-                        f"batch {batch_index}/{total_batches}; the policy-aware "
-                        "profile contract is required."
-                    )
-                evaluated.extend(_apply_policy_to_profiles(
+                evaluated.extend(generate_evaluated_batch(
+                    provider,
                     batch_input,
-                    proposed.evaluated_sources,
+                    user_payload,
+                    task_name=f"source_evaluation_batch_{batch_index}",
+                    max_retries=settings.source_evaluator_max_retries,
                 ))
+                completed_batches += 1
             max_sources = state.get("config", {}).get("research", {}).get(
                 "max_sources",
                 len(evaluated),
             )
             evaluation = _compatibility_result(evaluated, max_sources=max_sources)
+            source_evaluation_metrics = _evaluation_provider_metrics(
+                provider,
+                candidate_count=len(candidates),
+                batch_size=batch_size,
+                total_batches=total_batches,
+                completed_batches=completed_batches,
+            )
 
         selected_sources, rejected = _apply_evaluation(candidates, evaluation)
         logger.info(
@@ -358,6 +478,7 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
             "source_registry": registry.as_serialized(),
             "candidate_sources": registry.as_pipeline_candidates(),
             "source_evaluations": serialized_evaluations,
+            "source_evaluation_metrics": source_evaluation_metrics,
             "selected_sources": selected_sources,
             "rejected_sources": rejected,
             "status": "sources_evaluated",
@@ -365,6 +486,13 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         }
     except Exception as error:
         return {
+            "source_evaluation_metrics": _evaluation_provider_metrics(
+                provider,
+                candidate_count=len(state.get("candidate_sources", [])),
+                batch_size=batch_size,
+                total_batches=total_batches,
+                completed_batches=completed_batches,
+            ),
             "errors": state.get("errors", []) + [{
                 "node": "source_evaluator",
                 "error": str(error),

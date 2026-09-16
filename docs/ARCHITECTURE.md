@@ -773,6 +773,24 @@ reference_document
 
 These labels must remain extensible.
 
+Source characterization uses the same provider-neutral structured-generation
+contract as semantic extraction, but its routing configuration is independent:
+
+```text
+SourceEvaluator
+    -> SourceEvaluationRoutingProvider
+        -> GroqStructuredProvider
+        or
+        -> benchmark-approved OllamaStructuredProvider
+```
+
+The local evaluator must use strict JSON Schema output, preserve the ordered
+candidate batch, return every supplied URL exactly once, and pass the frozen
+source-policy benchmark before activation. Cloud fallback is explicit and
+disabled by default so a local failure cannot silently reintroduce provider
+rate-limit costs. Provider, model, batch completion, and fallback calls are
+stored in `source_evaluation_metrics` and projected into the run manifest.
+
 ---
 
 ## 15. Request-Specific Source Evaluation
@@ -1122,7 +1140,10 @@ src/tools/structured_generation/
 ├── __init__.py
 ├── base.py
 ├── groq_provider.py
-└── local_provider.py       # optional later
+├── local_provider.py
+├── ollama_provider.py
+├── routing_provider.py
+└── source_evaluation_provider.py
 ```
 
 Conceptual interface:

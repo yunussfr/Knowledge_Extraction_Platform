@@ -26,6 +26,26 @@ from src.schemas.models import (
 from src.tools.web.models import SourcePreview
 
 
+class _CallbackProvider:
+    provider_name = "fixture"
+
+    def __init__(self, callback):
+        self.callback = callback
+
+    def generate(self, *, system_prompt, user_prompt, output_model, task_name):
+        del task_name
+        return self.callback(self, system_prompt, user_prompt, output_model)
+
+    def metrics(self):
+        return {
+            "provider": self.provider_name,
+            "model": "fixture",
+            "local_calls": 0,
+            "cloud_calls": 0,
+            "fallback_calls": 0,
+        }
+
+
 def _preview(url: str, *, success: bool = True) -> SourcePreview:
     return SourcePreview(
         url=url,
@@ -339,8 +359,8 @@ def test_live_boundary_recomputes_policy_and_rejects_model_hard_rule_bypass(monk
     original_provider = settings.data_source_provider
     object.__setattr__(settings, "data_source_provider", "firecrawl")
     monkeypatch.setattr(
-        "src.agents.nodes.source_evaluator_node.GroqClient.complete_json",
-        fake_complete_json,
+        "src.agents.nodes.source_evaluator_node.get_source_evaluation_provider",
+        lambda: _CallbackProvider(fake_complete_json),
     )
     try:
         result = source_evaluator_node({
@@ -402,8 +422,8 @@ def test_live_boundary_rejects_omitted_or_invented_candidate_urls(monkeypatch):
     original_provider = settings.data_source_provider
     object.__setattr__(settings, "data_source_provider", "firecrawl")
     monkeypatch.setattr(
-        "src.agents.nodes.source_evaluator_node.GroqClient.complete_json",
-        fake_complete_json,
+        "src.agents.nodes.source_evaluator_node.get_source_evaluation_provider",
+        lambda: _CallbackProvider(fake_complete_json),
     )
     try:
         result = source_evaluator_node({
@@ -446,10 +466,12 @@ def test_live_evaluator_batches_candidates_in_order_with_continuity_context(monk
         ])
 
     original_provider = settings.data_source_provider
+    original_batch_size = settings.source_evaluation_batch_size
     object.__setattr__(settings, "data_source_provider", "firecrawl")
+    object.__setattr__(settings, "source_evaluation_batch_size", 10)
     monkeypatch.setattr(
-        "src.agents.nodes.source_evaluator_node.GroqClient.complete_json",
-        fake_complete_json,
+        "src.agents.nodes.source_evaluator_node.get_source_evaluation_provider",
+        lambda: _CallbackProvider(fake_complete_json),
     )
     try:
         result = source_evaluator_node({
@@ -464,6 +486,9 @@ def test_live_evaluator_batches_candidates_in_order_with_continuity_context(monk
         })
     finally:
         object.__setattr__(settings, "data_source_provider", original_provider)
+        object.__setattr__(
+            settings, "source_evaluation_batch_size", original_batch_size
+        )
 
     assert result["status"] == "sources_evaluated"
     assert len(result["source_evaluations"]) == 23

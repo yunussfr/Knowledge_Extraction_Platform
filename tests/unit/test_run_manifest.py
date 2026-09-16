@@ -29,6 +29,11 @@ def test_manifest_contains_diagnosable_phase22_metrics(tmp_path):
             "policy_alignment_score": 0.8,
             "hard_policy_rejected": False,
         }],
+        "source_evaluation_metrics": {
+            "provider": "ollama",
+            "model": "gemma4:e4b-it-qat",
+            "fallback_calls": 0,
+        },
         "source_selections": [{"source_type": "academic"}],
         "selected_sources": [{"domain": "example.test"}],
         "document_chunks": [{"token_count": 12}],
@@ -50,6 +55,8 @@ def test_manifest_contains_diagnosable_phase22_metrics(tmp_path):
     assert result["status"] == "completed"
     assert result["run_metrics"]["sources"]["queries_generated"] == 2
     assert result["run_metrics"]["sources"]["raw_search_results"] == 3
+    assert result["run_metrics"]["source_evaluation"]["provider"] == "ollama"
+    assert result["run_metrics"]["source_evaluation"]["fallback_calls"] == 0
     assert result["run_metrics"]["acquisition"]["total_content_tokens"] == 12
     assert result["run_metrics"]["extraction_validation"]["records_extracted"] == 1
     assert result["run_metrics"]["cost_performance"]["model_calls"] == 0

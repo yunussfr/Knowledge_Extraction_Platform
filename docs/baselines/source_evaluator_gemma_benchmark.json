@@ -1,0 +1,425 @@
+{
+  "batch_size": 2,
+  "benchmark": "source_evaluator_gemma",
+  "benchmark_version": "1.0",
+  "decision_metrics": {
+    "by_policy": {
+      "policy_a": {
+        "expected_selected": 10,
+        "predicted_selected": 14,
+        "useful_selection_recall": 1.0
+      },
+      "policy_b": {
+        "expected_selected": 7,
+        "predicted_selected": 7,
+        "useful_selection_recall": 0.857143
+      }
+    },
+    "useful_selection_recall": 0.941176
+  },
+  "errors": [],
+  "metrics": {
+    "candidate_count": 24,
+    "hard_policy_violation_rate": 0.0,
+    "hard_policy_violation_rate_by_policy": {
+      "policy_a": 0.0,
+      "policy_b": 0.0
+    },
+    "policy_alignment_accuracy": 0.875,
+    "policy_alignment_accuracy_by_policy": {
+      "policy_a": 0.833333,
+      "policy_b": 0.916667
+    },
+    "policy_count": 2,
+    "precision_at_10_by_policy": {
+      "policy_a": 0.9,
+      "policy_b": 0.5
+    },
+    "precision_at_5_by_policy": {
+      "policy_a": 1.0,
+      "policy_b": 0.8
+    },
+    "same_source_multi_policy_outcome_count": 9,
+    "source_precision_at_10": 0.7,
+    "source_precision_at_5": 0.9
+  },
+  "model": "gemma4:e4b-it-qat",
+  "operational_metrics": {
+    "batch_failure_rate": 0.0,
+    "candidate_completeness_rate": 1.0,
+    "failed_batches": 0,
+    "latency_seconds": 410.444659,
+    "schema_validity_rate": 1.0,
+    "successful_batches": 24,
+    "total_batches": 24
+  },
+  "predictions_by_policy": {
+    "policy_a": [
+      {
+        "candidate_id": "government_deep_relevant",
+        "decision": "select",
+        "final_score": 0.963182,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "government_shallow_relevant",
+        "decision": "select",
+        "final_score": 0.580227,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "government_irrelevant",
+        "decision": "reject",
+        "final_score": 0.19,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "independent_deep_relevant",
+        "decision": "select",
+        "final_score": 0.905909,
+        "hard_policy_rejected": false,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "independent_shallow",
+        "decision": "reject",
+        "final_score": 0.334545,
+        "hard_policy_rejected": false,
+        "source_type": "independent"
+      },
+      {
+        "candidate_id": "university_useful",
+        "decision": "select",
+        "final_score": 0.922273,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "university_irrelevant",
+        "decision": "reject",
+        "final_score": 0.121591,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "official_documentation_useful",
+        "decision": "select",
+        "final_score": 0.890682,
+        "hard_policy_rejected": false,
+        "source_type": "official_documentation"
+      },
+      {
+        "candidate_id": "official_documentation_shallow",
+        "decision": "reject",
+        "final_score": 0.371364,
+        "hard_policy_rejected": false,
+        "source_type": "official_documentation"
+      },
+      {
+        "candidate_id": "thin_blog",
+        "decision": "reject",
+        "final_score": 0.371364,
+        "hard_policy_rejected": false,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "duplicate_independent_page",
+        "decision": "select",
+        "final_score": 0.81,
+        "hard_policy_rejected": false,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "useful_non_seed_domain",
+        "decision": "select",
+        "final_score": 0.81,
+        "hard_policy_rejected": false,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "academic_deep_relevant",
+        "decision": "select",
+        "final_score": 0.955,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "academic_shallow_relevant",
+        "decision": "select",
+        "final_score": 0.785455,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "academic_irrelevant",
+        "decision": "reject",
+        "final_score": 0.121591,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "forum_implementation_deep",
+        "decision": "select",
+        "final_score": 0.821136,
+        "hard_policy_rejected": false,
+        "source_type": "forum"
+      },
+      {
+        "candidate_id": "social_media_opinion",
+        "decision": "reject",
+        "final_score": 0.173636,
+        "hard_policy_rejected": false,
+        "source_type": "social_media"
+      },
+      {
+        "candidate_id": "dataset_attention_benchmarks",
+        "decision": "select",
+        "final_score": 0.874318,
+        "hard_policy_rejected": false,
+        "source_type": "dataset"
+      },
+      {
+        "candidate_id": "official_marketing",
+        "decision": "reject",
+        "final_score": 0.369091,
+        "hard_policy_rejected": false,
+        "source_type": "official"
+      },
+      {
+        "candidate_id": "university_benchmark_useful",
+        "decision": "select",
+        "final_score": 0.938636,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "news_recent_relevant",
+        "decision": "select",
+        "final_score": 0.569091,
+        "hard_policy_rejected": false,
+        "source_type": "news"
+      },
+      {
+        "candidate_id": "independent_benchmark_deep",
+        "decision": "select",
+        "final_score": 0.939659,
+        "hard_policy_rejected": false,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "government_primary_facts",
+        "decision": "reject",
+        "final_score": 0.294091,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "academic_duplicate",
+        "decision": "reject",
+        "final_score": 0.542727,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      }
+    ],
+    "policy_b": [
+      {
+        "candidate_id": "government_deep_relevant",
+        "decision": "select",
+        "final_score": 0.937,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "government_shallow_relevant",
+        "decision": "select",
+        "final_score": 0.637,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "government_irrelevant",
+        "decision": "reject",
+        "final_score": 0.271,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "independent_deep_relevant",
+        "decision": "reject",
+        "final_score": 0.856,
+        "hard_policy_rejected": true,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "independent_shallow",
+        "decision": "reject",
+        "final_score": 0.418,
+        "hard_policy_rejected": true,
+        "source_type": "independent"
+      },
+      {
+        "candidate_id": "university_useful",
+        "decision": "select",
+        "final_score": 0.883,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "university_irrelevant",
+        "decision": "reject",
+        "final_score": 0.163,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "official_documentation_useful",
+        "decision": "reject",
+        "final_score": 0.8825,
+        "hard_policy_rejected": true,
+        "source_type": "official_documentation"
+      },
+      {
+        "candidate_id": "official_documentation_shallow",
+        "decision": "reject",
+        "final_score": 0.418,
+        "hard_policy_rejected": true,
+        "source_type": "official_documentation"
+      },
+      {
+        "candidate_id": "thin_blog",
+        "decision": "reject",
+        "final_score": 0.418,
+        "hard_policy_rejected": true,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "duplicate_independent_page",
+        "decision": "reject",
+        "final_score": 0.8015,
+        "hard_policy_rejected": true,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "useful_non_seed_domain",
+        "decision": "reject",
+        "final_score": 0.758,
+        "hard_policy_rejected": true,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "academic_deep_relevant",
+        "decision": "select",
+        "final_score": 0.937,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "academic_shallow_relevant",
+        "decision": "select",
+        "final_score": 0.8055,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "academic_irrelevant",
+        "decision": "reject",
+        "final_score": 0.28,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      },
+      {
+        "candidate_id": "forum_implementation_deep",
+        "decision": "reject",
+        "final_score": 0.765,
+        "hard_policy_rejected": true,
+        "source_type": "forum"
+      },
+      {
+        "candidate_id": "social_media_opinion",
+        "decision": "reject",
+        "final_score": 0.374,
+        "hard_policy_rejected": true,
+        "source_type": "social_media"
+      },
+      {
+        "candidate_id": "dataset_attention_benchmarks",
+        "decision": "reject",
+        "final_score": 0.874,
+        "hard_policy_rejected": true,
+        "source_type": "dataset"
+      },
+      {
+        "candidate_id": "official_marketing",
+        "decision": "reject",
+        "final_score": 0.383,
+        "hard_policy_rejected": true,
+        "source_type": "official_documentation"
+      },
+      {
+        "candidate_id": "university_benchmark_useful",
+        "decision": "select",
+        "final_score": 0.91,
+        "hard_policy_rejected": false,
+        "source_type": "university"
+      },
+      {
+        "candidate_id": "news_recent_relevant",
+        "decision": "reject",
+        "final_score": 0.447,
+        "hard_policy_rejected": true,
+        "source_type": "news"
+      },
+      {
+        "candidate_id": "independent_benchmark_deep",
+        "decision": "reject",
+        "final_score": 0.801,
+        "hard_policy_rejected": true,
+        "source_type": "independent_technical"
+      },
+      {
+        "candidate_id": "government_primary_facts",
+        "decision": "reject",
+        "final_score": 0.462,
+        "hard_policy_rejected": false,
+        "source_type": "government"
+      },
+      {
+        "candidate_id": "academic_duplicate",
+        "decision": "select",
+        "final_score": 0.682,
+        "hard_policy_rejected": false,
+        "source_type": "academic"
+      }
+    ]
+  },
+  "provider": "ollama",
+  "quality_gate": {
+    "checks": {
+      "batch_failure_rate": true,
+      "candidate_completeness_rate": true,
+      "every_policy_selects_a_source": true,
+      "hard_policy_violation_rate": true,
+      "policy_alignment_accuracy": true,
+      "schema_validity_rate": true,
+      "source_precision_at_10": true,
+      "source_precision_at_5": true,
+      "useful_selection_recall": true
+    },
+    "passed": true,
+    "thresholds": {
+      "batch_failure_rate": 0.0,
+      "candidate_completeness_rate": 1.0,
+      "every_policy_selects_a_source": true,
+      "hard_policy_violation_rate": 0.0,
+      "policy_alignment_accuracy_minimum": 0.7,
+      "schema_validity_rate": 1.0,
+      "source_precision_at_10_minimum": 0.65,
+      "source_precision_at_5_minimum": 0.8,
+      "useful_selection_recall_minimum": 0.6
+    }
+  },
+  "status": "completed"
+}

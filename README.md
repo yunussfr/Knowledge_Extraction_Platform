@@ -20,7 +20,8 @@ The platform is one connected evidence web rather than a chain of isolated agent
 %%{init: {"theme":"dark","themeVariables":{"background":"#050608","primaryColor":"#171022","primaryTextColor":"#f5ead6","primaryBorderColor":"#9b87c7","lineColor":"#8f7cad","secondaryColor":"#082226","tertiaryColor":"#2a0d16","fontFamily":"Georgia, Times New Roman, serif"}}}%%
 flowchart TB
     REQUEST[Domain request] --> PLAN[Research plan] --> SEARCH[Firecrawl discovery]
-    SEARCH --> PREVIEW[Crawl4AI previews] --> EVALUATE[Policy-aware evaluation]
+    SEARCH --> RERANK[BGE-Reranker-v2-m3 pre-filtering] --> PREVIEW[Crawl4AI previews]
+    PREVIEW --> EVALUATE[Policy-aware evaluation]
     EVALUATE --> SELECT[Source selection] --> SCHEMA[Draft target schema]
     SCHEMA --> APPROVAL{Human approval}
 
@@ -42,7 +43,7 @@ flowchart TB
     STORE --> RAG[RAG chunks]
     STORE --> GRAPH[Evidence-backed GraphRAG]
     STORE --> COVERAGE[Coverage state]
-    COVERAGE --> TASKS[Bounded enrichment tasks]
+    TASKS[Bounded enrichment tasks]
     TASKS -. next research thread .-> SEARCH
     STORE -. inspect .-> DASH[Future dashboard]
 
@@ -58,7 +59,7 @@ flowchart TB
     classDef blood fill:#260b12,stroke:#ef4444,color:#ffe4e6,stroke-width:2px;
     classDef core fill:#090b10,stroke:#f0d8a8,color:#fff7e6,stroke-width:4px;
     classDef store fill:#0c1720,stroke:#38bdf8,color:#e0f2fe,stroke-width:2px;
-    class REQUEST,PLAN,SEARCH,PREVIEW,EVALUATE,SELECT hunt;
+    class REQUEST,PLAN,SEARCH,RERANK,PREVIEW,EVALUATE,SELECT hunt;
     class SCHEMA,APPROVAL,ACQUIRE,CLEAN,CHUNK,ROUTER,DET,LOCAL,GROQ,EVIDENCE intelligence;
     class VERIFY,RESOLVE,ENRICH,EXPORT blood;
     class CORE core;
@@ -83,6 +84,7 @@ Every “thread” has a job and a boundary:
 ```text
 🕷️ Research      plans the hunt; it does not browse
 🕸️ Firecrawl     discovers candidates; it does not decide truth
+🎯 BGE-Reranker   pre-filters candidates by semantic confidence threshold
 🧭 Crawl4AI      previews and acquires selected pages
 🧪 Extraction    prefers deterministic rules before probabilistic models
 🔎 Evidence      binds every accepted value to supplied source text
@@ -95,6 +97,10 @@ Every “thread” has a job and a boundary:
 [Crawl4AI](https://github.com/unclecode/crawl4ai) is the page-acquisition layer. In this project it provides browser-based previews, controlled page retrieval, Markdown/HTML content, links, caching, bounded concurrency, and local-fixture testing. It is deliberately not the “brain”: it does not choose dataset fields, invent facts, assign final confidence, or write knowledge records.
 
 [Firecrawl](https://www.firecrawl.dev/) is used at the discovery boundary to search for candidate URLs. The application evaluates those candidates against the user’s explicit source policy and sends only selected pages to the acquisition provider.
+
+### BGE-Reranker-v2-m3, explained simply
+
+[BAAI/bge-reranker-v2-m3](https://huggingface.co/BAAI/bge-reranker-v2-m3) is the cross-encoder semantic pre-filtering layer placed between Firecrawl discovery and Crawl4AI previews. When Firecrawl discovers a large pool of candidate URLs, the cross-encoder scores the semantic relevance between the user's research topic and candidate metadata (`title` + `description`), normalizes the logit through a sigmoid function into `[0.0, 1.0]`, and filters out candidates that fail the domain's `minimum_confidence` threshold (configured in `request.yaml`). It also assigns concise candidate IDs (`cand_1`, `cand_2`, ...) so downstream evaluation models never omit or mangle complex URLs.
 
 ## Quality is a gate, not a feeling
 
@@ -124,7 +130,7 @@ The implementation has moved beyond a simple scraper into a resumable knowledge 
 | Layer | Current capability |
 | --- | --- |
 | **Configuration** | Domain-specific YAML requests, source policy, schema constraints, and output profiles |
-| **Web** | Firecrawl discovery boundary plus Crawl4AI preview/acquisition boundary |
+| **Web & Filtering** | Firecrawl discovery → BGE-Reranker-v2-m3 cross-encoder pre-filtering (`minimum_confidence` threshold & candidate IDs) → Crawl4AI preview/acquisition |
 | **Processing** | Bronze acquisition → deterministic Silver cleaning → token-aware chunks |
 | **Extraction** | CSS/XPath/regex/table routes first, structured generation as fallback |
 | **Knowledge** | Persistent sources, documents, chunks, records, entities, facts, relations, and evidence |
@@ -240,12 +246,45 @@ sources:
 flowchart LR
     A[request.yaml] --> B{DATA_SOURCE_PROVIDER}
     B -->|mock| C[offline fixtures]
-    B -->|firecrawl| D[real discovery] --> E[Crawl4AI selected-page acquisition]
+    B -->|firecrawl| D[real discovery] --> R[BGE-Reranker pre-filtering] --> E[Crawl4AI selected-page acquisition]
     C --> F[shared processing + validation]
     E --> F --> G[knowledge/datasets]
 ```
 
 Mock mode needs no provider key. Real mode needs credentials and network access. Local-model routing is optional and benchmark-gated; it does not silently replace Groq unless the local backend is enabled and approved.
+
+A cross-encoder model can pre-filter large discovery pools before page preview and evaluation:
+
+```env
+RERANKER_PROVIDER=cross_encoder
+RERANKER_MODEL=BAAI/bge-reranker-v2-m3
+RERANKER_MIN_SCORE=0.60
+RERANKER_DEVICE=cuda
+```
+
+Source evaluation can be routed independently to a benchmark-approved Ollama
+model without changing planner, schema-design, or extraction routing:
+
+```env
+SOURCE_EVALUATOR_PROVIDER=ollama
+SOURCE_EVALUATOR_MODEL=gemma4:e4b-it-qat
+SOURCE_EVALUATION_BATCH_SIZE=2
+SOURCE_EVALUATOR_TIMEOUT=180
+SOURCE_EVALUATOR_MAX_RETRIES=2
+SOURCE_EVALUATOR_CLOUD_FALLBACK=false
+SOURCE_EVALUATOR_BENCHMARK_APPROVED=true
+```
+
+Reproduce the local evaluator quality gate with:
+
+```powershell
+.\.venv\Scripts\python.exe -m scripts.run_source_evaluator_gemma_benchmark --model gemma4:e4b-it-qat --batch-size 2 --save
+```
+
+The command exits unsuccessfully when schema validity, candidate completeness,
+policy quality, useful-source recall, or hard-policy safety misses its saved
+acceptance threshold. Cloud fallback is opt-in and its call count is exposed in
+the run manifest.
 
 The output profiles are independent views over shared evidence:
 
@@ -261,8 +300,9 @@ Each run can also write a manifest and resumable checkpoint beside the dataset. 
 configs/domains/                 domain requests and schemas
 run_domain_test.py                terminal entry point
 src/agents/graphs/                canonical LangGraph orchestration
-src/agents/nodes/                 planning, crawling, extraction, evidence, knowledge
+src/agents/nodes/                 planning, reranking, crawling, extraction, evidence, knowledge
 src/tools/web/                    Firecrawl and Crawl4AI provider boundaries
+src/tools/reranker/               BGE-Reranker-v2-m3 cross-encoder pre-filtering
 src/tools/structured_generation/  local and Groq adapters + router
 src/storage/                      persistent models and repositories
 src/schemas/                      Pydantic contracts

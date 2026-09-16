@@ -362,6 +362,8 @@ class SourceCandidate(BaseModel):
     candidate_metadata: Dict[str, Any] = Field(default_factory=dict)
     source_profile: Optional[Dict[str, Any]] = None
     policy_evaluation: Optional[Dict[str, Any]] = None
+    candidate_id: Optional[str] = None
+    reranker_score: Optional[float] = None
 
     @field_validator("canonical_url")
     @classmethod
@@ -468,7 +470,8 @@ class SourceProfile(BaseModel):
 class EvaluatedSource(BaseModel):
     """Reusable profile plus request-specific policy evaluation."""
 
-    url: str
+    url: str = ""
+    candidate_id: Optional[str] = None
     source_profile: SourceProfile
     topic_relevance_score: float = Field(ge=0.0, le=1.0)
     policy_alignment_score: float = Field(default=0.0, ge=0.0, le=1.0)
