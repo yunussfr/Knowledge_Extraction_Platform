@@ -476,7 +476,7 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         )
         return {
             "source_registry": registry.as_serialized(),
-            "candidate_sources": registry.as_pipeline_candidates(),
+            "candidate_sources": registry.active_pipeline_candidates(),
             "source_evaluations": serialized_evaluations,
             "source_evaluation_metrics": source_evaluation_metrics,
             "selected_sources": selected_sources,

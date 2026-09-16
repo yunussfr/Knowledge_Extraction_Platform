@@ -163,3 +163,48 @@ def test_source_evaluator_resolves_candidate_by_id(monkeypatch):
         assert result["selected_sources"][0]["url"] == candidate_url
     finally:
         object.__setattr__(settings, "data_source_provider", original_provider)
+
+
+def test_score_normalization_1_to_5_scale():
+    """Verify that scores on a 1-5 scale (from local LLMs) are automatically normalized to 0.0-1.0."""
+    profile = SourceProfile(
+        source_type="government",
+        authority_score=3,  # 3 on 1-5 scale -> 0.60
+        information_density_score=1.5,  # 1.5 on 1-5 scale -> 0.30
+        technical_depth_score=2.5,  # 2.5 on 1-5 scale -> 0.50
+        extractability_score=4.0,  # 4.0 on 1-5 scale -> 0.80
+    )
+    assert profile.authority_score == 0.60
+    assert profile.information_density_score == 0.30
+    assert profile.technical_depth_score == 0.50
+    assert profile.extractability_score == 0.80
+
+    evaluated = EvaluatedSource(
+        url="https://example.com/test",
+        source_profile=profile,
+        topic_relevance_score=4.5,  # 4.5 on 1-5 scale -> 0.90
+    )
+    assert evaluated.topic_relevance_score == 0.90
+
+
+def test_source_preview_node_returns_only_active_candidates():
+    """Verify that source_preview_node only outputs active (rerank-accepted) candidates."""
+    from src.agents.nodes.source_preview_node import source_preview_node
+
+    registry = CandidateRegistry()
+    c1 = registry.add("https://example.com/accepted", origin=DiscoveryOrigin(method="search", query="test query"), title="Accepted")
+    c2 = registry.add("https://example.com/rejected", origin=DiscoveryOrigin(method="search", query="test query"), title="Rejected")
+    c2.selection_state = "rejected"
+    c2.preview_status = "skipped"
+
+    state = {
+        "source_registry": registry.as_serialized(),
+        "candidate_sources": [c1.to_pipeline_candidate()],
+        "source_previews": [],
+    }
+
+    result = source_preview_node(state)
+    assert result["status"] == "sources_previewed"
+    # Only the 1 active candidate is returned to candidate_sources
+    assert len(result["candidate_sources"]) == 1
+    assert result["candidate_sources"][0]["url"] == "https://example.com/accepted"

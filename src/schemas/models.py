@@ -466,6 +466,34 @@ class SourceProfile(BaseModel):
                 labels.append(label)
         return labels
 
+    @field_validator(
+        "authority_score",
+        "information_density_score",
+        "technical_depth_score",
+        "recency_score",
+        "extractability_score",
+        mode="before",
+    )
+    @classmethod
+    def normalize_profile_scores(cls, value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            return 0.5
+        if val < 0.0:
+            return 0.0
+        if val <= 1.0:
+            return round(val, 4)
+        if val <= 5.0:
+            return round(val / 5.0, 4)
+        if val <= 10.0:
+            return round(val / 10.0, 4)
+        if val <= 100.0:
+            return round(val / 100.0, 4)
+        return 1.0
+
 
 class EvaluatedSource(BaseModel):
     """Reusable profile plus request-specific policy evaluation."""
@@ -481,6 +509,27 @@ class EvaluatedSource(BaseModel):
     reasons: List[str] = Field(default_factory=list)
     preview_success: bool = True
     duplicate_of: Optional[str] = None
+
+    @field_validator("topic_relevance_score", mode="before")
+    @classmethod
+    def normalize_topic_relevance_score(cls, value: Any) -> float:
+        if value is None:
+            return 0.0
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            return 0.0
+        if val < 0.0:
+            return 0.0
+        if val <= 1.0:
+            return round(val, 4)
+        if val <= 5.0:
+            return round(val / 5.0, 4)
+        if val <= 10.0:
+            return round(val / 10.0, 4)
+        if val <= 100.0:
+            return round(val / 100.0, 4)
+        return 1.0
 
     @field_validator("reasons", mode="before")
     @classmethod

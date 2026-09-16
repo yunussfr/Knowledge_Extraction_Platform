@@ -141,7 +141,7 @@ def source_preview_node(state: Dict[str, Any]) -> Dict[str, Any]:
         )
         return {
             "source_registry": registry.as_serialized(),
-            "candidate_sources": registry.as_pipeline_candidates(),
+            "candidate_sources": registry.active_pipeline_candidates(),
             "source_previews": [preview.model_dump(mode="json") for preview in previews],
             "status": "sources_previewed",
             "pipeline_status": "sources_previewed",
