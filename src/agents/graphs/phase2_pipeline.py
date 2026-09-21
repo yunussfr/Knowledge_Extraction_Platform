@@ -29,6 +29,7 @@ from src.agents.nodes.quality_analysis_node import quality_analysis_node
 from src.agents.nodes.relation_extraction_node import relation_extraction_node
 from src.agents.nodes.record_resolution_node import record_resolution_node
 from src.agents.nodes.research_planner_node import research_planner_node
+from src.agents.nodes.source_reranker_node import source_reranker_node
 from src.agents.nodes.source_evaluator_node import source_evaluator_node
 from src.agents.nodes.source_preview_node import source_preview_node
 from src.agents.nodes.site_exploration_node import site_exploration_node
@@ -108,6 +109,7 @@ class DatasetGenerationPipeline:
         workflow.add_node("entry", _entry_node)
         workflow.add_node("research_planner", research_planner_node)
         workflow.add_node("source_search", source_search_node)
+        workflow.add_node("source_reranker", source_reranker_node)
         workflow.add_node("source_preview", source_preview_node)
         workflow.add_node("source_evaluator", source_evaluator_node)
         workflow.add_node("site_exploration", site_exploration_node)
@@ -149,7 +151,8 @@ class DatasetGenerationPipeline:
             {"research_planner": "research_planner", "acquisition": "acquisition", END: END},
         )
         workflow.add_conditional_edges("research_planner", _next_or_end("source_search"), {"source_search": "source_search", END: END})
-        workflow.add_conditional_edges("source_search", _next_or_end("source_preview"), {"source_preview": "source_preview", END: END})
+        workflow.add_conditional_edges("source_search", _next_or_end("source_reranker"), {"source_reranker": "source_reranker", END: END})
+        workflow.add_conditional_edges("source_reranker", _next_or_end("source_preview"), {"source_preview": "source_preview", END: END})
         workflow.add_conditional_edges("source_preview", _next_or_end("source_evaluator"), {"source_evaluator": "source_evaluator", END: END})
         workflow.add_conditional_edges("source_evaluator", _next_or_end("site_exploration"), {"site_exploration": "site_exploration", END: END})
         workflow.add_conditional_edges("site_exploration", _next_or_end("source_selector"), {"source_selector": "source_selector", END: END})

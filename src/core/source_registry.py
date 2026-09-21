@@ -187,6 +187,47 @@ class CandidateRegistry:
                     }:
                         candidate.rejection_reasons.append(reason)
 
+    def record_reranker_results(
+        self,
+        items: Sequence[Any],
+        *,
+        threshold: float,
+    ) -> None:
+        """Record reranker scores and candidate IDs, marking below-threshold candidates as rejected."""
+        for item in items:
+            url = getattr(item, "url", None) or (item.get("url") if isinstance(item, dict) else None)
+            if not url:
+                continue
+            candidate = self._find(url)
+            if candidate is None:
+                continue
+
+            score = getattr(item, "score", None) if hasattr(item, "score") else (item.get("score") if isinstance(item, dict) else None)
+            candidate_id = getattr(item, "candidate_id", None) if hasattr(item, "candidate_id") else (item.get("candidate_id") if isinstance(item, dict) else None)
+            passed = getattr(item, "passed_threshold", None) if hasattr(item, "passed_threshold") else (item.get("passed_threshold") if isinstance(item, dict) else None)
+
+            if score is not None:
+                candidate.reranker_score = float(score)
+            if candidate_id:
+                candidate.candidate_id = str(candidate_id)
+
+            if passed is False or (score is not None and score < threshold):
+                candidate.preview_status = "skipped"
+                candidate.evaluation_status = "completed"
+                candidate.selection_state = "rejected"
+                candidate.selected = False
+                reason = f"Cross-encoder relevance ({score:.4f}) is below minimum threshold ({threshold:.4f})."
+                if reason not in candidate.rejection_reasons:
+                    candidate.rejection_reasons.append(reason)
+
+    def active_pipeline_candidates(self) -> list[dict[str, Any]]:
+        """Return pipeline candidates that are not rejected by pre-filtering."""
+        return [
+            candidate.to_pipeline_candidate()
+            for candidate in self._candidates.values()
+            if candidate.selection_state != "rejected"
+        ]
+
     def as_serialized(self) -> dict[str, dict[str, Any]]:
         return {
             url: candidate.model_dump(mode="json")

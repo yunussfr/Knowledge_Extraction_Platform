@@ -61,6 +61,15 @@ def research_planner_node(state: Dict[str, Any]) -> Dict[str, Any]:
             user_prompt = json.dumps(
                 {
                     "planner_input": planner_input.model_dump(mode="json"),
+                    "research_plan_contract": ResearchPlan.model_json_schema(),
+                    "required_output_fields": [
+                        "research_topic",
+                        "subtopics",
+                        "search_queries",
+                        "preferred_source_types",
+                        "excluded_source_types",
+                        "query_families",
+                    ],
                     "query_requirements": {
                         "exact_count": planner_input.query_count,
                         "instruction": (

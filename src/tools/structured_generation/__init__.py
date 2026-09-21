@@ -5,6 +5,10 @@ from src.tools.structured_generation.groq_provider import GroqStructuredProvider
 from src.tools.structured_generation.local_provider import LocalStructuredProvider
 from src.tools.structured_generation.ollama_provider import OllamaStructuredProvider
 from src.tools.structured_generation.routing_provider import RoutingStructuredProvider
+from src.tools.structured_generation.source_evaluation_provider import (
+    SourceEvaluationRoutingProvider,
+    get_source_evaluation_provider,
+)
 
 
 def get_structured_generation_provider() -> StructuredGenerationProvider:
@@ -17,5 +21,7 @@ __all__ = [
     "OllamaStructuredProvider",
     "RoutingStructuredProvider",
     "StructuredGenerationProvider",
+    "SourceEvaluationRoutingProvider",
     "get_structured_generation_provider",
+    "get_source_evaluation_provider",
 ]

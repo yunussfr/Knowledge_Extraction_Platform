@@ -197,6 +197,7 @@ def build_run_metrics(state: AgentState) -> dict[str, Any]:
     acquisition["total_content_tokens"] = sum(int(item.get("token_count", 0)) for item in chunks)
     return {
         "source_policy": _source_policy_metrics(state),
+        "source_evaluation": dict(state.get("source_evaluation_metrics", {})),
         "sources": _source_metrics(state),
         "acquisition": acquisition,
         "extraction_validation": _extraction_metrics(state),

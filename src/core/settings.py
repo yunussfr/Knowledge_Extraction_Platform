@@ -55,6 +55,26 @@ class Settings:
     groq_request_timeout: int = _integer("GROQ_REQUEST_TIMEOUT", 60)
     groq_max_retries: int = _integer("GROQ_MAX_RETRIES", 2)
     source_evaluation_batch_size: int = _integer("SOURCE_EVALUATION_BATCH_SIZE", 2 )
+    source_evaluator_provider: str = os.getenv(
+        "SOURCE_EVALUATOR_PROVIDER", "groq"
+    ).strip().lower()
+    source_evaluator_model: str = os.getenv(
+        "SOURCE_EVALUATOR_MODEL", os.getenv("LOCAL_MODEL", "gemma4:e4b-it-qat")
+    )
+    source_evaluator_timeout: int = _integer("SOURCE_EVALUATOR_TIMEOUT", 180)
+    source_evaluator_max_retries: int = _integer(
+        "SOURCE_EVALUATOR_MAX_RETRIES", 2
+    )
+    source_evaluator_cloud_fallback: bool = _boolean(
+        "SOURCE_EVALUATOR_CLOUD_FALLBACK", False
+    )
+    source_evaluator_benchmark_approved: bool = _boolean(
+        "SOURCE_EVALUATOR_BENCHMARK_APPROVED", False
+    )
+    reranker_provider: str = os.getenv("RERANKER_PROVIDER", "cross_encoder").strip().lower()
+    reranker_model: str = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
+    reranker_min_score: float = _float("RERANKER_MIN_SCORE", 0.60)
+    reranker_device: str = os.getenv("RERANKER_DEVICE", "cuda")
     groq_structured_output_mode: str = os.getenv(
         "GROQ_STRUCTURED_OUTPUT_MODE", "auto"
     ).strip().lower()

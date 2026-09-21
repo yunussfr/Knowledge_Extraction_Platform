@@ -362,6 +362,8 @@ class SourceCandidate(BaseModel):
     candidate_metadata: Dict[str, Any] = Field(default_factory=dict)
     source_profile: Optional[Dict[str, Any]] = None
     policy_evaluation: Optional[Dict[str, Any]] = None
+    candidate_id: Optional[str] = None
+    reranker_score: Optional[float] = None
 
     @field_validator("canonical_url")
     @classmethod
@@ -464,11 +466,40 @@ class SourceProfile(BaseModel):
                 labels.append(label)
         return labels
 
+    @field_validator(
+        "authority_score",
+        "information_density_score",
+        "technical_depth_score",
+        "recency_score",
+        "extractability_score",
+        mode="before",
+    )
+    @classmethod
+    def normalize_profile_scores(cls, value: Any) -> float | None:
+        if value is None:
+            return None
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            return 0.5
+        if val < 0.0:
+            return 0.0
+        if val <= 1.0:
+            return round(val, 4)
+        if val <= 5.0:
+            return round(val / 5.0, 4)
+        if val <= 10.0:
+            return round(val / 10.0, 4)
+        if val <= 100.0:
+            return round(val / 100.0, 4)
+        return 1.0
+
 
 class EvaluatedSource(BaseModel):
     """Reusable profile plus request-specific policy evaluation."""
 
-    url: str
+    url: str = ""
+    candidate_id: Optional[str] = None
     source_profile: SourceProfile
     topic_relevance_score: float = Field(ge=0.0, le=1.0)
     policy_alignment_score: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -478,6 +509,27 @@ class EvaluatedSource(BaseModel):
     reasons: List[str] = Field(default_factory=list)
     preview_success: bool = True
     duplicate_of: Optional[str] = None
+
+    @field_validator("topic_relevance_score", mode="before")
+    @classmethod
+    def normalize_topic_relevance_score(cls, value: Any) -> float:
+        if value is None:
+            return 0.0
+        try:
+            val = float(value)
+        except (ValueError, TypeError):
+            return 0.0
+        if val < 0.0:
+            return 0.0
+        if val <= 1.0:
+            return round(val, 4)
+        if val <= 5.0:
+            return round(val / 5.0, 4)
+        if val <= 10.0:
+            return round(val / 10.0, 4)
+        if val <= 100.0:
+            return round(val / 100.0, 4)
+        return 1.0
 
     @field_validator("reasons", mode="before")
     @classmethod

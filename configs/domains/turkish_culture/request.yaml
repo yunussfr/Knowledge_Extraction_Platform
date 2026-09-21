@@ -1,5 +1,5 @@
 dataset:
-  name: my_dataset
+  name: my_d
   topic: Türkiyenin kültürü ,tarihi , edebiyatı ve müzik geleneği .
   purpose: Ben bir LLM fine-tuning dataset oluşturmak istiyorum. Bu dataset, Türk kültürü, tarihi, edebiyatı, müziği, gelenekleri ve insanlarının tarihini kapsayan bilgileri içerecek. Ayrıca bu ülkenin bilinirliğini artıracak zaferler ve kültürel temelleri ile inançlarını da içerecek. Konuşma biçimleri ve davranışlarının sinerjisi de bu datasetin bir parçası olacak.
   profile: structured
@@ -9,7 +9,6 @@ research:
   max_sources: 10
   constraints: |
     The sources must be authoritative and reliable, such as government websites, academic publications, and reputable news outlets.
-
 
 sources:
   seed_urls: []
@@ -55,7 +54,8 @@ extraction:
     overlap_tokens: 300
 
 quality:
-  minimum_confidence: 0.60
+  minimum_confidence: 0.10
+  # bottom values can take review and reject , this here append to rejected_source but label as rewiev 
   low_confidence_action: review
 
 output:

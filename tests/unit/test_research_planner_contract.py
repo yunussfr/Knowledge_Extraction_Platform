@@ -178,6 +178,15 @@ def test_integer_queries_config_is_the_exact_live_query_target(monkeypatch):
 
     assert result["status"] == "research_plan_ready"
     assert captured["payload"]["query_requirements"]["exact_count"] == 4
+    assert captured["payload"]["required_output_fields"] == [
+        "research_topic",
+        "subtopics",
+        "search_queries",
+        "preferred_source_types",
+        "excluded_source_types",
+        "query_families",
+    ]
+    assert "search_queries" in captured["payload"]["research_plan_contract"]["properties"]
     assert len(result["research_plan"]["search_queries"]) == 4
 
 
