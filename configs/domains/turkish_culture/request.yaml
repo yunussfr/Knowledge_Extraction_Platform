@@ -54,7 +54,8 @@ extraction:
     overlap_tokens: 300
 
 quality:
-  minimum_confidence: 0.60
+  minimum_confidence: 0.10
+  # bottom values can take review and reject , this here append to rejected_source but label as rewiev 
   low_confidence_action: review
 
 output:

@@ -97,15 +97,17 @@ def generate_evaluated_batch(
     *,
     task_name: str,
     max_retries: int,
+    system_prompt: str | None = None,
 ) -> list[EvaluatedSource]:
     """Generate and fully validate one batch with bounded local retries."""
     if max_retries < 0:
         raise ValueError("SourceEvaluator max_retries must be at least 0.")
+    resolved_system_prompt = system_prompt if system_prompt is not None else SOURCE_EVALUATOR_SYSTEM_PROMPT
     last_error: Exception | None = None
     for attempt in range(max_retries + 1):
         try:
             proposed = provider.generate(
-                system_prompt=SOURCE_EVALUATOR_SYSTEM_PROMPT,
+                system_prompt=resolved_system_prompt,
                 user_prompt=json.dumps(
                     user_payload, ensure_ascii=False, sort_keys=True
                 ),
@@ -410,6 +412,12 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
             total_batches = (len(candidates) + batch_size - 1) // batch_size
             evaluated: list[EvaluatedSource] = []
             provider = get_source_evaluation_provider()
+            minimum_confidence = state.get("config", {}).get("quality", {}).get(
+                "minimum_confidence", settings.minimum_confidence
+            )
+            formatted_system_prompt = SOURCE_EVALUATOR_SYSTEM_PROMPT.format(
+                minimum_confidence=minimum_confidence
+            )
             for batch_index, start in enumerate(
                 range(0, len(candidates), batch_size),
                 start=1,
@@ -441,6 +449,7 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
                     user_payload,
                     task_name=f"source_evaluation_batch_{batch_index}",
                     max_retries=settings.source_evaluator_max_retries,
+                    system_prompt=formatted_system_prompt,
                 ))
                 completed_batches += 1
             max_sources = state.get("config", {}).get("research", {}).get(
