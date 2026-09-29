@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any, Dict
 
 from src.agents.prompts import SOURCE_EVALUATOR_SYSTEM_PROMPT
@@ -24,6 +25,15 @@ from src.tools.web.models import SourcePreview
 
 
 logger = get_logger(__name__)
+
+GENERATION_IDENTITY_REJECTION_REASON = (
+    "Source evaluation was excluded because local and cloud generation "
+    "did not preserve the candidate identity."
+)
+
+
+class SourceEvaluationIdentityError(ValueError):
+    """Raised when generated evaluations cannot be mapped to supplied candidates."""
 
 
 def _evaluation_provider_metrics(
@@ -106,25 +116,47 @@ def generate_evaluated_batch(
     last_error: Exception | None = None
     for attempt in range(max_retries + 1):
         try:
-            proposed = provider.generate(
-                system_prompt=resolved_system_prompt,
-                user_prompt=json.dumps(
+            def validate_result(
+                proposed: SourceEvaluationResult,
+            ) -> list[EvaluatedSource]:
+                if not proposed.evaluated_sources:
+                    raise ValueError(
+                        "SourceEvaluator returned no evaluated_sources; the "
+                        "policy-aware profile contract is required."
+                    )
+                return _apply_policy_to_profiles(
+                    batch_input, proposed.evaluated_sources
+                )
+
+            generation_args = {
+                "system_prompt": resolved_system_prompt,
+                "user_prompt": json.dumps(
                     user_payload, ensure_ascii=False, sort_keys=True
                 ),
-                output_model=SourceEvaluationResult,
-                task_name=f"{task_name}_attempt_{attempt + 1}",
-            )
-            if not proposed.evaluated_sources:
-                raise ValueError(
-                    "SourceEvaluator returned no evaluated_sources; the "
-                    "policy-aware profile contract is required."
+                "output_model": SourceEvaluationResult,
+                "task_name": f"{task_name}_attempt_{attempt + 1}",
+            }
+            if hasattr(provider, "generate_validated"):
+                return provider.generate_validated(
+                    **generation_args,
+                    validator=validate_result,
                 )
-            return _apply_policy_to_profiles(
-                batch_input, proposed.evaluated_sources
-            )
+            return validate_result(provider.generate(**generation_args))
         except Exception as error:
             last_error = error
     assert last_error is not None
+    if isinstance(last_error, SourceEvaluationIdentityError):
+        candidate_urls = [
+            _canonical_key(candidate.get("canonical_url") or candidate["url"])
+            for candidate in batch_input.candidate_sources
+        ]
+        logger.warning(
+            "Excluding source evaluation batch after local/cloud candidate-identity "
+            "validation failed. Candidates: %s. Error: %s",
+            ", ".join(candidate_urls),
+            last_error,
+        )
+        return _identity_failure_rejections(batch_input, last_error)
     raise last_error
 
 
@@ -189,6 +221,94 @@ def _canonical_key(url: str) -> str:
         return url
 
 
+def _unwrap_exact_markdown_url(value: str) -> str:
+    """Unwrap only a Markdown link whose label and target are the same URL."""
+    stripped = value.strip()
+    match = re.fullmatch(
+        r"\[(https?://[^\]\s]+)\]\((https?://[^)\s]+)\)",
+        stripped,
+    )
+    if match is None:
+        return stripped
+
+    label_url, target_url = match.groups()
+    if _canonical_key(label_url) == _canonical_key(target_url):
+        return target_url
+    return stripped
+
+
+def _partition_candidates_by_preview(
+    evaluator_input: SourceEvaluatorInput,
+) -> tuple[list[dict[str, Any]], list[EvaluatedSource]]:
+    """Send only successful previews to the model and reject failures deterministically."""
+    previews = _preview_map(evaluator_input.source_previews)
+    model_candidates: list[dict[str, Any]] = []
+    deterministic_rejections: list[EvaluatedSource] = []
+
+    for candidate in evaluator_input.candidate_sources:
+        url = _canonical_key(
+            candidate.get("canonical_url") or candidate["url"]
+        )
+        preview = previews.get(url)
+
+        if preview is not None and preview.fetch_success:
+            model_candidates.append(candidate)
+            continue
+
+        if preview is None:
+            reason = (
+                "Source preview was missing; skipped model-based "
+                "source characterization."
+            )
+        else:
+            reason = (
+                "Source preview failed; skipped model-based "
+                "source characterization."
+            )
+
+        deterministic_rejections.append(
+            evaluate_source_for_policy(
+                url=url,
+                profile=SourceProfile(source_type="unknown"),
+                topic_relevance_score=0.0,
+                preview=preview,
+                policy=evaluator_input.source_policy,
+                preferred_domains=evaluator_input.preferred_domains,
+                allowed_domains=evaluator_input.allowed_domains,
+                blocked_domains=evaluator_input.blocked_domains,
+                model_reasons=[reason],
+            )
+        )
+
+    return model_candidates, deterministic_rejections
+
+
+def _identity_failure_rejections(
+    evaluator_input: SourceEvaluatorInput,
+    error: SourceEvaluationIdentityError,
+) -> list[EvaluatedSource]:
+    """Reject an invalid generated batch without losing candidate provenance."""
+    previews = _preview_map(evaluator_input.source_previews)
+    rejected: list[EvaluatedSource] = []
+    for candidate in evaluator_input.candidate_sources:
+        url = _canonical_key(candidate.get("canonical_url") or candidate["url"])
+        rejected.append(evaluate_source_for_policy(
+            url=url,
+            profile=SourceProfile(source_type="unknown"),
+            topic_relevance_score=0.0,
+            preview=previews.get(url),
+            policy=evaluator_input.source_policy,
+            preferred_domains=evaluator_input.preferred_domains,
+            allowed_domains=evaluator_input.allowed_domains,
+            blocked_domains=evaluator_input.blocked_domains,
+            model_reasons=[
+                GENERATION_IDENTITY_REJECTION_REASON,
+                f"Candidate identity validation error: {error}",
+            ],
+        ))
+    return rejected
+
+
 def _apply_policy_to_profiles(
     evaluator_input: SourceEvaluatorInput,
     proposed: list[EvaluatedSource],
@@ -205,24 +325,29 @@ def _apply_policy_to_profiles(
     proposed_by_url: dict[str, EvaluatedSource] = {}
     for item in proposed:
         matched_key = None
+        returned_url = _unwrap_exact_markdown_url(item.url) if item.url else ""
         if item.candidate_id and str(item.candidate_id) in candidate_by_id:
             matched_key = candidate_by_id[str(item.candidate_id)]
-        elif item.url in candidate_by_id:
-            matched_key = candidate_by_id[item.url]
-        elif item.url:
-            key = _canonical_key(item.url)
+        elif returned_url in candidate_by_id:
+            matched_key = candidate_by_id[returned_url]
+        elif returned_url:
+            key = _canonical_key(returned_url)
             if key in candidates:
                 matched_key = key
 
         if not matched_key:
-            raise ValueError(f"SourceEvaluator returned an unknown URL: {item.url}")
+            raise SourceEvaluationIdentityError(
+                f"SourceEvaluator returned an unknown URL: {item.url}"
+            )
         if matched_key in proposed_by_url:
-            raise ValueError(f"SourceEvaluator returned a duplicate URL: {matched_key}")
+            raise SourceEvaluationIdentityError(
+                f"SourceEvaluator returned a duplicate URL: {matched_key}"
+            )
         item.url = matched_key
         proposed_by_url[matched_key] = item
     missing = [url for url in candidates if url not in proposed_by_url]
     if missing:
-        raise ValueError(
+        raise SourceEvaluationIdentityError(
             "SourceEvaluator omitted candidate URLs: " + ", ".join(missing)
         )
 
@@ -409,61 +534,101 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         else:
             if batch_size < 1:
                 raise ValueError("SOURCE_EVALUATION_BATCH_SIZE must be at least 1.")
-            total_batches = (len(candidates) + batch_size - 1) // batch_size
-            evaluated: list[EvaluatedSource] = []
-            provider = get_source_evaluation_provider()
-            minimum_confidence = state.get("config", {}).get("quality", {}).get(
-                "minimum_confidence", settings.minimum_confidence
+
+            model_candidates, deterministic_rejections = (
+                _partition_candidates_by_preview(evaluator_input)
             )
-            formatted_system_prompt = SOURCE_EVALUATOR_SYSTEM_PROMPT.format(
-                minimum_confidence=minimum_confidence
+            logger.info(
+                "Evaluating %d preview-success candidates; deterministically "
+                "rejecting %d preview failures.",
+                len(model_candidates),
+                len(deterministic_rejections),
             )
-            for batch_index, start in enumerate(
-                range(0, len(candidates), batch_size),
-                start=1,
-            ):
-                batch_candidates = candidates[start:start + batch_size]
-                batch_input = _batched_evaluator_input(
-                    evaluator_input,
-                    batch_candidates,
+
+            total_batches = (
+                (len(model_candidates) + batch_size - 1) // batch_size
+                if model_candidates
+                else 0
+            )
+            evaluated_by_url = {
+                _canonical_key(item.url): item
+                for item in deterministic_rejections
+            }
+
+            if model_candidates:
+                provider = get_source_evaluation_provider()
+                minimum_confidence = state.get("config", {}).get("quality", {}).get(
+                    "minimum_confidence", settings.minimum_confidence
                 )
-                end = start + len(batch_candidates)
-                user_payload = build_evaluation_user_payload(
-                    batch_input,
-                    batch_number=batch_index,
-                    total_batches=total_batches,
-                    candidate_start_position=start + 1,
-                    candidate_end_position=end,
-                    total_candidates=len(candidates),
+                formatted_system_prompt = SOURCE_EVALUATOR_SYSTEM_PROMPT.format(
+                    minimum_confidence=minimum_confidence
                 )
-                logger.info(
-                    "Evaluating source batch %d/%d (candidate positions %d-%d).",
-                    batch_index,
-                    total_batches,
-                    start + 1,
-                    end,
-                )
-                evaluated.extend(generate_evaluated_batch(
-                    provider,
-                    batch_input,
-                    user_payload,
-                    task_name=f"source_evaluation_batch_{batch_index}",
-                    max_retries=settings.source_evaluator_max_retries,
-                    system_prompt=formatted_system_prompt,
-                ))
-                completed_batches += 1
+                for batch_index, start in enumerate(
+                    range(0, len(model_candidates), batch_size),
+                    start=1,
+                ):
+                    batch_candidates = model_candidates[start:start + batch_size]
+                    batch_input = _batched_evaluator_input(
+                        evaluator_input,
+                        batch_candidates,
+                    )
+                    end = start + len(batch_candidates)
+                    user_payload = build_evaluation_user_payload(
+                        batch_input,
+                        batch_number=batch_index,
+                        total_batches=total_batches,
+                        candidate_start_position=start + 1,
+                        candidate_end_position=end,
+                        total_candidates=len(model_candidates),
+                    )
+                    logger.info(
+                        "Evaluating source batch %d/%d "
+                        "(preview-success candidate positions %d-%d).",
+                        batch_index,
+                        total_batches,
+                        start + 1,
+                        end,
+                    )
+                    batch_evaluations = generate_evaluated_batch(
+                        provider,
+                        batch_input,
+                        user_payload,
+                        task_name=f"source_evaluation_batch_{batch_index}",
+                        max_retries=settings.source_evaluator_max_retries,
+                        system_prompt=formatted_system_prompt,
+                    )
+                    for item in batch_evaluations:
+                        evaluated_by_url[_canonical_key(item.url)] = item
+                    completed_batches += 1
+
+            evaluated = [
+                evaluated_by_url[
+                    _canonical_key(candidate.get("canonical_url") or candidate["url"])
+                ]
+                for candidate in candidates
+            ]
             max_sources = state.get("config", {}).get("research", {}).get(
                 "max_sources",
                 len(evaluated),
             )
             evaluation = _compatibility_result(evaluated, max_sources=max_sources)
-            source_evaluation_metrics = _evaluation_provider_metrics(
-                provider,
-                candidate_count=len(candidates),
-                batch_size=batch_size,
-                total_batches=total_batches,
-                completed_batches=completed_batches,
-            )
+            source_evaluation_metrics = {
+                **_evaluation_provider_metrics(
+                    provider,
+                    candidate_count=len(candidates),
+                    batch_size=batch_size,
+                    total_batches=total_batches,
+                    completed_batches=completed_batches,
+                ),
+                "model_evaluated_candidates": len(model_candidates),
+                "deterministic_preview_rejections": len(
+                    deterministic_rejections
+                ),
+                "generation_identity_rejections": sum(
+                    GENERATION_IDENTITY_REJECTION_REASON in item.reasons
+                    for item in evaluated
+                ),
+            }
 
         selected_sources, rejected = _apply_evaluation(candidates, evaluation)
         logger.info(
