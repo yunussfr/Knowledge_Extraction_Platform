@@ -406,7 +406,7 @@ def test_live_boundary_recomputes_policy_and_rejects_model_hard_rule_bypass(monk
     assert "no eligible source" in selection["errors"][-1]["error"]
 
 
-def test_live_boundary_rejects_omitted_or_invented_candidate_urls(monkeypatch):
+def test_live_boundary_excludes_invented_url_and_continues(monkeypatch):
     urls = ["https://example.com/one", "https://example.com/two"]
     registry = CandidateRegistry()
     for index, url in enumerate(urls):
@@ -439,8 +439,127 @@ def test_live_boundary_rejects_omitted_or_invented_candidate_urls(monkeypatch):
     finally:
         object.__setattr__(settings, "data_source_provider", original_provider)
 
-    assert result["status"] == "failed"
-    assert "unknown URL" in result["errors"][-1]["error"]
+    assert result["status"] == "sources_evaluated"
+    assert len(result["source_evaluations"]) == 2
+    assert all(
+        item["decision"] == "reject"
+        for item in result["source_evaluations"]
+    )
+    assert all(
+        any(
+            "did not preserve the candidate identity" in reason
+            for reason in item["reasons"]
+        )
+        for item in result["source_evaluations"]
+    )
+    assert result["source_evaluation_metrics"][
+        "generation_identity_rejections"
+    ] == 2
+
+
+def test_live_boundary_accepts_exact_markdown_wrapping_of_candidate_url(monkeypatch):
+    url = "https://example.com/source"
+    registry = CandidateRegistry()
+    registry.add(url, origin=DiscoveryOrigin(method="search", query="source"))
+
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        return SourceEvaluationResult(evaluated_sources=[EvaluatedSource(
+            url=f"[{url}]({url})",
+            source_profile=_deep_independent(),
+            topic_relevance_score=0.9,
+            reasons=["Exact Markdown URL wrapper fixture."],
+        )])
+
+    original_provider = settings.data_source_provider
+    original_batch_size = settings.source_evaluation_batch_size
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    object.__setattr__(settings, "source_evaluation_batch_size", 1)
+    monkeypatch.setattr(
+        "src.agents.nodes.source_evaluator_node.get_source_evaluation_provider",
+        lambda: _CallbackProvider(fake_complete_json),
+    )
+    try:
+        result = source_evaluator_node({
+            "dataset_topic": "Candidate URL identity",
+            "dataset_purpose": "Structured dataset",
+            "source_policy": SourcePolicy().model_dump(mode="json"),
+            "config": {"research": {"max_sources": 1}, "sources": {}},
+            "candidate_sources": registry.as_pipeline_candidates(),
+            "source_registry": registry.as_serialized(),
+            "source_previews": [_preview(url).model_dump(mode="json")],
+            "errors": [],
+        })
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+        object.__setattr__(
+            settings, "source_evaluation_batch_size", original_batch_size
+        )
+
+    assert result["status"] == "sources_evaluated"
+    assert result["source_evaluations"][0]["url"] == url
+
+
+def test_live_evaluator_skips_failed_previews_and_preserves_rejection(monkeypatch):
+    good_url = "https://example.com/good"
+    failed_url = "https://example.com/failed"
+    registry = CandidateRegistry()
+    for url in [good_url, failed_url]:
+        registry.add(url, origin=DiscoveryOrigin(method="search", query="source"))
+
+    captured_urls = []
+
+    def fake_complete_json(self, system_prompt, user_prompt, output_model):
+        payload = json.loads(user_prompt)
+        batch_candidates = payload["evaluator_input"]["candidate_sources"]
+        captured_urls.extend(item["url"] for item in batch_candidates)
+        return SourceEvaluationResult(evaluated_sources=[EvaluatedSource(
+            url=good_url,
+            source_profile=_deep_independent(),
+            topic_relevance_score=0.9,
+            reasons=["Successful preview fixture."],
+        )])
+
+    original_provider = settings.data_source_provider
+    original_batch_size = settings.source_evaluation_batch_size
+    object.__setattr__(settings, "data_source_provider", "firecrawl")
+    object.__setattr__(settings, "source_evaluation_batch_size", 1)
+    monkeypatch.setattr(
+        "src.agents.nodes.source_evaluator_node.get_source_evaluation_provider",
+        lambda: _CallbackProvider(fake_complete_json),
+    )
+    try:
+        result = source_evaluator_node({
+            "dataset_topic": "Preview filtering",
+            "dataset_purpose": "Structured dataset",
+            "source_policy": SourcePolicy().model_dump(mode="json"),
+            "config": {"research": {"max_sources": 2}, "sources": {}},
+            "candidate_sources": registry.as_pipeline_candidates(),
+            "source_registry": registry.as_serialized(),
+            "source_previews": [
+                _preview(good_url).model_dump(mode="json"),
+                _preview(failed_url, success=False).model_dump(mode="json"),
+            ],
+            "errors": [],
+        })
+    finally:
+        object.__setattr__(settings, "data_source_provider", original_provider)
+        object.__setattr__(
+            settings, "source_evaluation_batch_size", original_batch_size
+        )
+
+    assert result["status"] == "sources_evaluated"
+    assert captured_urls == [good_url]
+    assert [item["url"] for item in result["source_evaluations"]] == [
+        good_url,
+        failed_url,
+    ]
+    failed = EvaluatedSource.model_validate(result["source_evaluations"][1])
+    assert failed.preview_success is False
+    assert failed.decision == "reject"
+    assert result["source_evaluation_metrics"]["model_evaluated_candidates"] == 1
+    assert result["source_evaluation_metrics"][
+        "deterministic_preview_rejections"
+    ] == 1
 
 
 def test_live_evaluator_batches_candidates_in_order_with_continuity_context(monkeypatch):

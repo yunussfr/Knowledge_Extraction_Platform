@@ -105,6 +105,35 @@ def test_explicit_cloud_fallback_is_counted():
     assert provider.metrics()["cloud_calls"] == 1
 
 
+def test_local_semantic_validation_failure_uses_cloud_fallback():
+    provider = SourceEvaluationRoutingProvider(
+        provider="ollama",
+        model="gemma-fixture",
+        benchmark_approved=True,
+        cloud_fallback=True,
+        local=FixtureProvider("invalid-local"),
+        cloud=FixtureProvider("valid-cloud"),
+    )
+
+    def validate(result: Output) -> Output:
+        if result.value != "valid-cloud":
+            raise ValueError("unknown candidate URL")
+        return result
+
+    result = provider.generate_validated(
+        system_prompt="system",
+        user_prompt="user",
+        output_model=Output,
+        task_name="source_evaluation_test",
+        validator=validate,
+    )
+
+    assert result.value == "valid-cloud"
+    assert provider.metrics()["local_calls"] == 1
+    assert provider.metrics()["fallback_calls"] == 1
+    assert provider.metrics()["cloud_calls"] == 1
+
+
 def test_source_evaluator_has_no_direct_groq_dependency():
     project_root = Path(__file__).resolve().parents[2]
     source = (
