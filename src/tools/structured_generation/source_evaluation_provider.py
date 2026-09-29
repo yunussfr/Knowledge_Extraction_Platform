@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import TypeVar
 
 from pydantic import BaseModel
@@ -12,6 +13,7 @@ from src.tools.structured_generation.ollama_provider import OllamaStructuredProv
 
 
 OutputModel = TypeVar("OutputModel", bound=BaseModel)
+ValidatedResult = TypeVar("ValidatedResult")
 
 
 class SourceEvaluationRoutingProvider:
@@ -72,13 +74,33 @@ class SourceEvaluationRoutingProvider:
         output_model: type[OutputModel],
         task_name: str,
     ) -> OutputModel:
+        return self.generate_validated(
+            system_prompt=system_prompt,
+            user_prompt=user_prompt,
+            output_model=output_model,
+            task_name=task_name,
+            validator=lambda result: result,
+        )
+
+    def generate_validated(
+        self,
+        *,
+        system_prompt: str,
+        user_prompt: str,
+        output_model: type[OutputModel],
+        task_name: str,
+        validator: Callable[[OutputModel], ValidatedResult],
+    ) -> ValidatedResult:
+        """Validate local semantics before accepting or falling back to cloud."""
         if self.configured_provider == "groq":
             self.cloud_calls += 1
-            return self.cloud.generate(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                output_model=output_model,
-                task_name=task_name,
+            return validator(
+                self.cloud.generate(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    output_model=output_model,
+                    task_name=task_name,
+                )
             )
 
         if not self.benchmark_approved:
@@ -90,11 +112,13 @@ class SourceEvaluationRoutingProvider:
 
         self.local_calls += 1
         try:
-            return self.local.generate(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                output_model=output_model,
-                task_name=task_name,
+            return validator(
+                self.local.generate(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    output_model=output_model,
+                    task_name=task_name,
+                )
             )
         except Exception as error:
             if not self.cloud_fallback_enabled:
@@ -103,11 +127,13 @@ class SourceEvaluationRoutingProvider:
                 ) from error
             self.fallback_calls += 1
             self.cloud_calls += 1
-            return self.cloud.generate(
-                system_prompt=system_prompt,
-                user_prompt=user_prompt,
-                output_model=output_model,
-                task_name=task_name,
+            return validator(
+                self.cloud.generate(
+                    system_prompt=system_prompt,
+                    user_prompt=user_prompt,
+                    output_model=output_model,
+                    task_name=task_name,
+                )
             )
 
     def metrics(self) -> dict[str, object]:
