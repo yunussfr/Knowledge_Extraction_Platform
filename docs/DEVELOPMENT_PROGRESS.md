@@ -78,6 +78,29 @@
   one dark gothic theme. Local image links, Mermaid init JSON, SVG XML, and the
   browser-rendered persistence graphic were verified; no runtime behavior was
   changed.
+- 2026-09-30 — **Local live observability panel** (`--watch-web`) implemented.
+  A bounded, sanitized `EventJournal` (ring buffer, up to 2 000 events / 16 MB
+  detail store) collects pipeline events independently of `AgentState` and
+  `LangGraph` checkpoints. A loopback SSE/HTTP server (`WatchServer`, random
+  ephemeral port, 127.0.0.1 only) streams events to a three-column Turkish
+  dashboard (node sidebar, live stream, event detail) via `Server-Sent Events`
+  with reconnect, snapshot catchup, and gap detection. Security headers
+  (CSP, `X-Content-Type-Options`, `Referrer-Policy`, Host/Origin rebinding
+  guard) and bounded concurrency (8 SSE / 16 HTTP slots) are enforced.
+  All secrets and API keys are redacted before publication. Observation
+  failures are swallowed and never alter business outcome.
+  Hook points: every graph node is wrapped with `observed_node`, model
+  providers use `model_exchange`, Crawl4AI emits `page_completed` per page,
+  and `source_selector` emits per-source `source_selected`/rejected events.
+  Schema approval wait and post-run inspection are correctly signalled in
+  the panel header. `run_domain_test.py` gained `--watch-web`, which opens
+  the browser automatically. The duplicate `source_selected` rejected-block
+  copy introduced during implementation was removed.
+- Verification: `tests/unit/test_observability.py` — **12 passed** in 3.53 s;
+  `compileall -q src scripts tests` — no errors; existing test suite
+  unchanged (pre-existing `scripts.run_phase1_evaluation` /
+  `scripts.capture_phase0_baseline` missing-module collection errors are
+  unrelated legacy issues).
 
 ---
 

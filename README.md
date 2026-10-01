@@ -170,6 +170,56 @@ SQLite is the zero-configuration local default. PostgreSQL uses the same reposit
 
 
 
+## Live pipeline panel (`--watch-web`)
+
+Add `--watch-web` to any run to open a local browser panel that streams events in real time while the pipeline is still running:
+
+```powershell
+.\.venv\Scripts\python.exe run_domain_test.py --domain turkish_culture --watch-web
+```
+
+The panel opens automatically at `http://127.0.0.1:<port>` (loopback only, random ephemeral port). It stays available after the pipeline finishes so you can inspect the full event history before closing it with **Ctrl+C**.
+
+<!-- SCREENSHOT PLACEHOLDER
+     Replace the comment below with your panel screenshot once captured.
+     Recommended: docs/assets/watch-web-panel.png  (≈1400 × 900 px)
+
+<p align="center">
+  <img src="docs/assets/watch-web-panel.png"
+       alt="Live pipeline panel showing node sidebar, event stream, and event detail pane"
+       width="980">
+</p>
+-->
+
+### Three-panel layout
+
+| Column | What it shows |
+| --- | --- |
+| **Node sidebar** | Every graph node with live status — click to filter the event stream to that node only |
+| **Live stream** | All events in order: `node_started`, `node_completed`, `page_completed`, `model_request`, `model_response`, `source_discovered`, `source_selected`, `policy_applied`, `retry`, `fallback`, `run_status` |
+| **Event detail** | Full payload for the selected event; linked request/response pairs for model calls; truncation notice when the in-memory limit is reached |
+
+### Key behaviours
+
+- **Schema approval** — when the pipeline pauses for schema review the panel header shows a notice and greys the status indicator. Reply in the terminal (`1 / 2 / 3`); the live stream continues in the same panel session after approval.
+- **Reconnect** — if the browser tab refreshes or loses the SSE connection it catches up via snapshot and resumes streaming without losing already-received events.
+- **Memory-safe** — the event ring buffer holds up to 2 000 events and 16 MB of detail payloads. Older events are evicted automatically; the panel shows a gap notice when this happens.
+- **Secrets redacted** — API keys, tokens, and credentials matching environment variable names are replaced with `[REDACTED]` before any event reaches the browser.
+- **Read-only + loopback-only** — the server binds to `127.0.0.1`, enforces `Host` / `Origin` rebinding guards, and serves no write endpoints.
+
+### Project map entry
+
+```text
+src/observability/
+    events.py          bounded EventJournal, emit, observed_node, model_exchange
+    web_server.py      SSE/HTTP server (WatchServer)
+    static/
+        index.html     three-column dashboard shell
+        app.js         SSE client, snapshot catch-up, filter, detail fetch
+        styles.css     dark-theme layout
+```
+
+
 ## Future dashboard: from terminal spider to research cockpit
 
 The terminal runner is the current presentation layer. A future dashboard will sit on the same serializable `AgentState` and checkpoint contracts, so the UI can visualize a run without rewriting the pipeline:
