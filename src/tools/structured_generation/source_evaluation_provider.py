@@ -6,6 +6,7 @@ from collections.abc import Callable
 from typing import TypeVar
 
 from pydantic import BaseModel
+from src.observability.events import emit
 
 from src.core.settings import settings
 from src.tools.structured_generation.groq_provider import GroqStructuredProvider
@@ -125,6 +126,7 @@ class SourceEvaluationRoutingProvider:
                 raise RuntimeError(
                     f"Local SourceEvaluator failed with {self.model_name}: {error}"
                 ) from error
+            emit("fallback", status="fallback", details={"from_model": self.model_name, "to_provider": "groq", "to_model": settings.groq_model, "reason": str(error)})
             self.fallback_calls += 1
             self.cloud_calls += 1
             return validator(

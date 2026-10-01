@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import asyncio
+from contextvars import copy_context
+from time import perf_counter
+from src.observability.events import current_journal, emit, operation
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -114,11 +117,36 @@ class Crawl4AIAcquisitionProvider:
         return self._acquire_document(url)
 
     def _acquire_document(self, url: str, *, query: str | None = None) -> AcquiredDocument:
-        try:
-            result = self._run_async(self._load_result(url, query=query))
-            return self._normalize_result(url, result)
-        except Exception as exc:  # Provider/browser failures are data, not leaked SDK errors.
-            return self._failure_document(url, exc)
+        with operation(source_url=url):
+            started = perf_counter()
+            try:
+                result = self._run_async(self._load_result(url, query=query))
+                document = self._normalize_result(url, result)
+            except Exception as exc:  # Provider/browser failures are data, not leaked SDK errors.
+                document = self._failure_document(url, exc)
+            self._publish_document(document, started, 1, 1)
+            return document
+
+    @staticmethod
+    def _publish_document(document, started, completed, total):
+        if current_journal() is not None:
+            emit("page_completed", source_url=document.source_url,
+                 status="completed" if document.success else "error",
+                 duration_seconds=perf_counter() - started,
+                 details={**document.model_dump(mode="json"), "completed": completed, "total": total,
+                          "content_length": len(document.raw_markdown)})
+
+    def _publish_outcome(self, url, outcome, started, completed, total):
+        if current_journal() is not None:
+            try:
+                document = self._failure_document(url, outcome) if isinstance(outcome, BaseException) else self._normalize_result(url, outcome)
+                dispatch = getattr(outcome, "dispatch_result", None)
+                if dispatch is not None:
+                    started = perf_counter() - max(0, dispatch.end_time - dispatch.start_time)
+                with operation(source_url=url):
+                    self._publish_document(document, started, completed, total)
+            except Exception:
+                pass  # Observation must not turn a successful crawl into a failure.
 
     def acquire_many(self, urls: list[str]) -> list[AcquiredDocument]:
         """Acquire an ordered batch with bounded concurrency and isolated failures."""
@@ -148,9 +176,10 @@ class Crawl4AIAcquisitionProvider:
         semaphore = asyncio.Semaphore(self.batch_concurrency)
         throttle_lock = asyncio.Lock()
         next_start = 0.0
+        completed = 0
 
         async def load(url: str) -> Any:
-            nonlocal next_start
+            nonlocal next_start, completed
             async with semaphore:
                 async with throttle_lock:
                     loop = asyncio.get_running_loop()
@@ -164,8 +193,15 @@ class Crawl4AIAcquisitionProvider:
                         # the configured minimum start spacing remains true.
                         await asyncio.sleep(wait_seconds)
                     next_start = loop.time() + self.batch_delay_seconds
-                result = self._result_loader(url)
-                return await result if inspect.isawaitable(result) else result
+                started = perf_counter()
+                try:
+                    result = self._result_loader(url)
+                    outcome = await result if inspect.isawaitable(result) else result
+                except Exception as error:
+                    outcome = error
+                completed += 1
+                self._publish_outcome(url, outcome, started, completed, len(urls))
+                return outcome
 
         return list(await asyncio.gather(
             *(load(url) for url in urls),
@@ -186,7 +222,7 @@ class Crawl4AIAcquisitionProvider:
             cache_mode=getattr(CacheMode, self.cache_mode.upper()),
             page_timeout=self.page_timeout_ms,
             wait_until="domcontentloaded",
-            stream=False,
+            stream=True,
             semaphore_count=self.batch_concurrency,
             mean_delay=self.batch_delay_seconds,
             max_range=0.0,
@@ -206,11 +242,19 @@ class Crawl4AIAcquisitionProvider:
             config=browser_config,
             base_directory=str(self.base_directory),
         ) as crawler:
-            raw_results = list(await crawler.arun_many(
+            started = perf_counter()
+            results = await crawler.arun_many(
                 urls=crawler_urls,
                 config=run_config,
                 dispatcher=dispatcher,
-            ))
+            )
+            raw_results = []
+            async for result in results:
+                raw_results.append(result)
+                result_url = self._text(getattr(result, "url", None))
+                source_url = next((source for source, crawl in zip(urls, crawler_urls)
+                                   if result_url in {source, crawl}), result_url)
+                self._publish_outcome(source_url, result, started, len(raw_results), len(urls))
         return self._restore_batch_order(urls, crawler_urls, raw_results)
 
     @classmethod
@@ -394,7 +438,8 @@ class Crawl4AIAcquisitionProvider:
             except BaseException as exc:  # Re-raised on the calling thread below.
                 failure.append(exc)
 
-        thread = Thread(target=runner, name="crawl4ai-acquire", daemon=True)
+        context = copy_context()
+        thread = Thread(target=lambda: context.run(runner), name="crawl4ai-acquire", daemon=True)
         thread.start()
         thread.join()
         if failure:

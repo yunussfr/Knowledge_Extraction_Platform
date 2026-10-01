@@ -6,6 +6,7 @@ import re
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from pydantic import BaseModel
+from src.observability.events import emit
 
 from src.core.settings import settings
 from src.tools.groq_client import GroqClient
@@ -118,6 +119,7 @@ class GroqStructuredProvider:
         except Exception as error:
             if self.output_mode != "auto" or not (_strict_output_is_unsupported(error) or _provider_rejects_generated_schema(error)):
                 raise
+            emit("fallback", status="fallback", details={"provider": "groq", "from_format": "json_schema", "to_format": "json_object", "reason": str(error)})
             return self._client.complete_json(
                 system_prompt,
                 user_prompt + "\nUse the exact evidence object key `evidence_text` (never `exact_evidence_text`). Return one valid JSON object matching the requested schema.",

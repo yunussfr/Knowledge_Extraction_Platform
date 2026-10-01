@@ -8,6 +8,7 @@ from typing import Any
 from urllib.request import Request, urlopen
 
 from pydantic import BaseModel
+from src.observability.events import model_exchange
 
 
 def _strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
@@ -47,9 +48,13 @@ class OllamaStructuredProvider:
             output_schema = _strict_schema(output_schema)
         payload = {"model": self.model, "stream": False, "format": output_schema, "options": {"temperature": 0}, "system": system_prompt, "prompt": user_prompt}
         request = Request(f"{self.base_url}/api/generate", data=json.dumps(payload).encode("utf-8"), headers={"Content-Type": "application/json"}, method="POST")
-        with urlopen(request, timeout=self.timeout) as response:
-            body = json.loads(response.read().decode("utf-8"))
-        raw = body.get("response")
-        if not isinstance(raw, str):
-            raise RuntimeError("Local model returned no JSON response.")
-        return output_model.model_validate(json.loads(raw))
+        with model_exchange(model=self.model, provider="ollama", request=payload) as observed_response:
+            with urlopen(request, timeout=self.timeout) as response:
+                body = json.loads(response.read().decode("utf-8"))
+            raw = body.get("response")
+            if not isinstance(raw, str):
+                raise RuntimeError("Local model returned no JSON response.")
+            observed_response["raw_response"] = raw
+            result = output_model.model_validate(json.loads(raw))
+            observed_response["output"] = result
+            return result

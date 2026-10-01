@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, TypeVar
 
 from pydantic import BaseModel
 
+from src.observability.events import emit, model_exchange
 from src.core.retry import is_retryable_provider_error
 from src.core.settings import settings
 
@@ -47,20 +48,28 @@ class GroqClient:
                     effective_user_prompt += (
                         "\n\nReturn exactly one valid json object."
                     )
-                response = client.chat.completions.create(
-                    model=settings.groq_model,
-                    temperature=settings.groq_temperature,
-                    messages=[
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": effective_user_prompt},
-                    ],
-                    response_format=effective_response_format,
-                )
-                content = response.choices[0].message.content or "{}"
-                return output_model.model_validate(json.loads(content))
+                with model_exchange(model=settings.groq_model, provider="groq", request={
+                    "system_prompt": system_prompt, "user_prompt": effective_user_prompt,
+                    "response_format": effective_response_format, "attempt": attempt + 1,
+                }) as observed_response:
+                    response = client.chat.completions.create(
+                        model=settings.groq_model,
+                        temperature=settings.groq_temperature,
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": effective_user_prompt},
+                        ],
+                        response_format=effective_response_format,
+                    )
+                    content = response.choices[0].message.content or "{}"
+                    observed_response["raw_response"] = content
+                    result = output_model.model_validate(json.loads(content))
+                    observed_response["output"] = result
+                    return result
             except Exception as error:
                 last_error = error
                 if attempt < settings.groq_max_retries and is_retryable_provider_error(error):
+                    emit("retry", status="retry", details={"provider": "groq", "reason": str(error), "next_attempt": attempt + 2, "delay_seconds": 2 ** attempt})
                     sleep(2 ** attempt)
                     continue
                 break
