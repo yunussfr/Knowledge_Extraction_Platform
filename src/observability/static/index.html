@@ -1,0 +1,12 @@
+<!doctype html>
+<html lang="tr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Pipeline • Canlı izleme</title><link rel="stylesheet" href="/styles.css"><script src="/app.js" defer></script></head>
+<body>
+<header><div><span class="eyebrow">KNOWLEDGE EXTRACTION / CANLI İZLEME</span><h1 id="topic">Araştırma bekleniyor</h1></div><div class="indicators"><span id="connection" class="pill">Bağlanıyor</span><span id="status" class="pill">Bekliyor</span><span id="current-node">—</span><span id="elapsed">00:00</span></div></header>
+<div class="notice" id="notice" role="status">Olaylar yalnızca bu çalıştırmanın belleğinde tutulur. Şema onayı terminalden verilir.</div>
+<main>
+<aside><div class="section-title"><h2>Node'lar</h2><button id="all-nodes">Tümü</button></div><div id="nodes"></div></aside>
+<section class="stream-panel"><div class="section-title"><h2>Canlı akış <span id="count">0</span></h2><label><input id="autoscroll" type="checkbox" checked> Otomatik kaydır</label></div><div class="filters"><input id="source" type="search" placeholder="Kaynak URL'sine göre filtrele" aria-label="Kaynak filtresi"><label><input id="errors-only" type="checkbox"> Yalnızca hatalar</label></div><div id="events" tabindex="0"><p class="empty">Pipeline olayları burada görünecek.</p></div></section>
+<section class="detail-panel"><div class="section-title"><h2>Olay ayrıntısı</h2><span id="detail-id"></span></div><div id="detail"><p class="empty">İçeriği, sorguları ve karar nedenlerini incelemek için bir olay seçin.</p></div></section>
+</main><footer><span id="run-id">Yerel oturum</span><span>Salt okunur · Bellek sınırlı · 127.0.0.1</span></footer>
+</body></html>
