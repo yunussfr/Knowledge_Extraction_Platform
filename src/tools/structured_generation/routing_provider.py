@@ -7,6 +7,7 @@ import re
 from typing import TypeVar
 
 from pydantic import BaseModel
+from src.observability.events import emit
 
 from src.tools.structured_generation.groq_provider import GroqStructuredProvider
 from src.tools.structured_generation.ollama_provider import OllamaStructuredProvider
@@ -66,7 +67,8 @@ class RoutingStructuredProvider:
                 if getattr(result, "warnings", None) or not _evidence_quality_is_valid(result, user_prompt):
                     raise ValueError("Local structured output contained rejected records.")
                 return result
-            except Exception:
+            except Exception as error:
+                emit("fallback", status="fallback", details={"from_provider": "ollama", "to_provider": "groq", "reason": str(error)})
                 # Cloud escalation is intentionally narrow to this semantic boundary.
                 self.fallback_calls += 1
         self.cloud_calls += 1

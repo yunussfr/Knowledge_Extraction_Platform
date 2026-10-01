@@ -8,6 +8,7 @@ from typing import Any, Dict
 
 from langgraph.graph import END, StateGraph
 
+from src.observability.events import current_journal, emit, observed_node, publish_node_update
 from src.core.logging import get_logger
 from src.agents.nodes.acquisition_node import acquisition_node
 from src.agents.nodes.classification_node import classification_node
@@ -106,44 +107,48 @@ class DatasetGenerationPipeline:
 
     def __init__(self) -> None:
         workflow = StateGraph(AgentState)
-        workflow.add_node("entry", _entry_node)
-        workflow.add_node("research_planner", research_planner_node)
-        workflow.add_node("source_search", source_search_node)
-        workflow.add_node("source_reranker", source_reranker_node)
-        workflow.add_node("source_preview", source_preview_node)
-        workflow.add_node("source_evaluator", source_evaluator_node)
-        workflow.add_node("site_exploration", site_exploration_node)
-        workflow.add_node("source_selector", source_selector_node)
-        workflow.add_node("dataset_schema_designer", dataset_schema_designer_node)
-        workflow.add_node("acquisition", acquisition_node)
-        workflow.add_node("processing", processing_node)
-        workflow.add_node("chunking", chunking_node)
-        workflow.add_node("extraction_router", extraction_router_node)
-        workflow.add_node("structured_extraction", structured_extraction_node)
-        workflow.add_node("field_evidence", field_evidence_node)
-        workflow.add_node("evidence_validation", evidence_validation_node)
-        workflow.add_node("quality_gate", quality_gate_node)
-        workflow.add_node("record_resolution", record_resolution_node)
-        workflow.add_node("deduplication", deduplication_node)
-        workflow.add_node("classification", classification_node)
-        workflow.add_node("metadata_enrichment", metadata_enrichment_node)
-        workflow.add_node("entity_extraction", entity_extraction_node)
-        workflow.add_node("relation_extraction", relation_extraction_node)
-        workflow.add_node("quality_analysis", quality_analysis_node)
-        workflow.add_node("normalization", normalization_node)
-        workflow.add_node("validation", validation_node)
-        workflow.add_node("export", export_node)
-        workflow.add_node("manifest", manifest_node)
-        workflow.add_node("storage", storage_node)
-        workflow.add_node("coverage_analysis", coverage_analysis_node)
-        workflow.add_node("enrichment_planner", enrichment_planner_node)
-        workflow.add_node("checkpoint_sources", checkpoint_node("sources"))
-        workflow.add_node("checkpoint_acquisition", checkpoint_node("acquisition"))
-        workflow.add_node("checkpoint_processing", checkpoint_node("processing"))
-        workflow.add_node("checkpoint_chunking", checkpoint_node("chunking"))
-        workflow.add_node("checkpoint_extraction", checkpoint_node("extraction"))
-        workflow.add_node("checkpoint_validation", checkpoint_node("validation"))
-        workflow.add_node("checkpoint_export", checkpoint_node("export"))
+
+        def add_node(name, function):
+            workflow.add_node(name, observed_node(name, function))
+
+        add_node("entry", _entry_node)
+        add_node("research_planner", research_planner_node)
+        add_node("source_search", source_search_node)
+        add_node("source_reranker", source_reranker_node)
+        add_node("source_preview", source_preview_node)
+        add_node("source_evaluator", source_evaluator_node)
+        add_node("site_exploration", site_exploration_node)
+        add_node("source_selector", source_selector_node)
+        add_node("dataset_schema_designer", dataset_schema_designer_node)
+        add_node("acquisition", acquisition_node)
+        add_node("processing", processing_node)
+        add_node("chunking", chunking_node)
+        add_node("extraction_router", extraction_router_node)
+        add_node("structured_extraction", structured_extraction_node)
+        add_node("field_evidence", field_evidence_node)
+        add_node("evidence_validation", evidence_validation_node)
+        add_node("quality_gate", quality_gate_node)
+        add_node("record_resolution", record_resolution_node)
+        add_node("deduplication", deduplication_node)
+        add_node("classification", classification_node)
+        add_node("metadata_enrichment", metadata_enrichment_node)
+        add_node("entity_extraction", entity_extraction_node)
+        add_node("relation_extraction", relation_extraction_node)
+        add_node("quality_analysis", quality_analysis_node)
+        add_node("normalization", normalization_node)
+        add_node("validation", validation_node)
+        add_node("export", export_node)
+        add_node("manifest", manifest_node)
+        add_node("storage", storage_node)
+        add_node("coverage_analysis", coverage_analysis_node)
+        add_node("enrichment_planner", enrichment_planner_node)
+        add_node("checkpoint_sources", checkpoint_node("sources"))
+        add_node("checkpoint_acquisition", checkpoint_node("acquisition"))
+        add_node("checkpoint_processing", checkpoint_node("processing"))
+        add_node("checkpoint_chunking", checkpoint_node("chunking"))
+        add_node("checkpoint_extraction", checkpoint_node("extraction"))
+        add_node("checkpoint_validation", checkpoint_node("validation"))
+        add_node("checkpoint_export", checkpoint_node("export"))
 
         workflow.set_entry_point("entry")
         workflow.add_conditional_edges(
@@ -195,7 +200,26 @@ class DatasetGenerationPipeline:
         self._graph = workflow.compile()
 
     def invoke(self, state: AgentState) -> AgentState:
-        return self._graph.invoke(state)
+        if current_journal() is None:
+            return self._graph.invoke(state)
+        emit("run_status", status="running", topic=state.get("dataset_topic", state.get("domain", "")))
+        final_state = state
+        try:
+            # Values are LangGraph's reduced state, never a hand-merged approximation.
+            # Both streams come from this one execution.
+            for mode, value in self._graph.stream(state, stream_mode=["updates", "values"]):
+                if mode == "updates":
+                    for name, output in value.items():
+                        if isinstance(output, dict):
+                            publish_node_update(name, output)
+                elif mode == "values":
+                    final_state = value
+        except BaseException as error:
+            emit("run_status", status="error", details={"error": str(error)})
+            raise
+        emit("run_status", status=final_state.get("status", "unknown"),
+             message="Şema onayı bekleniyor; terminalden yanıt verin" if final_state.get("status") == "waiting_for_schema_approval" else "")
+        return final_state
 
     @staticmethod
     def _safe_review_name(state: AgentState) -> str:

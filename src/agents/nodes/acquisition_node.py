@@ -1,6 +1,7 @@
 from time import perf_counter
 from typing import Dict, Any
 
+from src.observability.events import emit
 from src.state.state import AgentState
 from src.core.settings import settings
 from src.tools.web import get_acquisition_provider
@@ -68,6 +69,8 @@ def acquisition_node(state: AgentState) -> Dict[str, Any]:
                     "cache_hits": sum(_is_cache_hit(item) for item in acquired_documents),
                     "acquisition_duration_seconds": duration,
                 }
+                emit("acquisition_completed", details=metrics,
+                     status="completed" if successful else "error")
                 errors = state.get("errors", []) + [{
                     "node": "acquisition",
                     "source_url": item.source_url,

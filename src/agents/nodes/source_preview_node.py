@@ -7,6 +7,7 @@ from hashlib import sha256
 from typing import Any, Dict
 from urllib.parse import urlsplit
 
+from src.observability.events import current_journal, emit, operation
 from src.core.logging import get_logger
 from src.core.settings import settings
 from src.core.source_registry import CandidateRegistry
@@ -132,6 +133,13 @@ def source_preview_node(state: Dict[str, Any]) -> Dict[str, Any]:
                 "completed" if preview.fetch_success else "failed",
             )
             previews.append(preview)
+            if current_journal() is not None:
+                with operation(source_url=url):
+                    emit("preview_completed", status="completed" if preview.fetch_success else "error",
+                         details={**preview.model_dump(mode="json"),
+                                  "content_length": len(preview.relevant_text),
+                                  "candidate": candidate, "cached": url in {p["url"] for p in state.get("source_previews", [])},
+                                  "completed": len(previews), "total": len(candidates)})
 
         success_count = sum(preview.fetch_success for preview in previews)
         logger.info(

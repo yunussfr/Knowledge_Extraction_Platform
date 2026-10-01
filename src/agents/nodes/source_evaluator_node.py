@@ -7,6 +7,7 @@ import re
 from typing import Any, Dict
 
 from src.agents.prompts import SOURCE_EVALUATOR_SYSTEM_PROMPT
+from src.observability.events import current_journal, emit, operation
 from src.core.logging import get_logger
 from src.core.settings import settings
 from src.core.source_policy_evaluator import evaluate_source_for_policy
@@ -100,7 +101,17 @@ def build_evaluation_user_payload(
     }
 
 
-def generate_evaluated_batch(
+def generate_evaluated_batch(provider, batch_input, user_payload, *, task_name, max_retries, system_prompt=None):
+    with operation(batch_id=task_name, source_urls=[candidate.get("canonical_url") or candidate["url"]
+                                                  for candidate in batch_input.candidate_sources]):
+        emit("evaluation_input", status="running", details=user_payload)
+        result = _generate_evaluated_batch(provider, batch_input, user_payload,
+            task_name=task_name, max_retries=max_retries, system_prompt=system_prompt)
+        emit("batch_completed", details={"evaluations": result})
+        return result
+
+
+def _generate_evaluated_batch(
     provider: Any,
     batch_input: SourceEvaluatorInput,
     user_payload: dict[str, Any],
@@ -124,9 +135,13 @@ def generate_evaluated_batch(
                         "SourceEvaluator returned no evaluated_sources; the "
                         "policy-aware profile contract is required."
                     )
-                return _apply_policy_to_profiles(
-                    batch_input, proposed.evaluated_sources
-                )
+                try:
+                    result = _apply_policy_to_profiles(batch_input, proposed.evaluated_sources)
+                except Exception as error:
+                    emit("evaluation_validated", status="error", details={"proposed": proposed, "validation": "failed", "error": str(error)})
+                    raise
+                emit("evaluation_validated", details={"proposed": proposed, "validation": "candidate_identity_and_policy_valid"})
+                return result
 
             generation_args = {
                 "system_prompt": resolved_system_prompt,
@@ -144,6 +159,8 @@ def generate_evaluated_batch(
             return validate_result(provider.generate(**generation_args))
         except Exception as error:
             last_error = error
+            if attempt < max_retries:
+                emit("retry", status="retry", details={"reason": str(error), "next_attempt": attempt + 2, "task": task_name})
     assert last_error is not None
     if isinstance(last_error, SourceEvaluationIdentityError):
         candidate_urls = [
@@ -643,6 +660,9 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         serialized_evaluations = [
             item.model_dump(mode="json") for item in evaluation.evaluated_sources
         ]
+        for item in serialized_evaluations:
+            emit("policy_applied", source_url=item["url"],
+                 status="rejected" if item.get("decision") == "reject" else "completed", details=item)
         registry.record_policy_evaluations(serialized_evaluations)
         registry.record_evaluation(
             selected_sources=selected_sources,
