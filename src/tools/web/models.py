@@ -33,6 +33,8 @@ class SourcePreview(BaseModel):
     relevant_text: str = ""
     approximate_word_count: int | None = None
     preview_word_count: int = 0
+    selected_passage_ranges: list[tuple[int, int]] = Field(default_factory=list)
+    selection_context_hash: str = ""
     internal_links: list[str] = Field(default_factory=list)
     external_links: list[str] = Field(default_factory=list)
     language: str | None = None

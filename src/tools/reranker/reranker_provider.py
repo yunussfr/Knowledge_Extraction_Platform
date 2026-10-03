@@ -36,12 +36,21 @@ class BaseRerankerProvider(ABC):
         """Rerank candidates against query and filter by minimum threshold."""
         ...
 
+    @abstractmethod
+    def score_passages(self, *, query: str, passages: Sequence[str]) -> List[float]:
+        """Score page passages without filtering out any of them."""
+        ...
+
 
 class MockRerankerProvider(BaseRerankerProvider):
     """Deterministic mock provider for tests and offline development."""
 
     def __init__(self, model_name: str = "mock-reranker") -> None:
         self.model_name = model_name
+
+    def score_passages(self, *, query: str, passages: Sequence[str]) -> List[float]:
+        terms = set(query.casefold().split())
+        return [float(len(terms & set(passage.casefold().split()))) for passage in passages]
 
     def rerank(
         self,
@@ -208,6 +217,7 @@ class CrossEncoderRerankerProvider(BaseRerankerProvider):
                 # bge-reranker outputs logits (can be negative or > 1), so apply sigmoid
                 scores.append(_sigmoid(val))
             return scores
+
         else:
             device = self._resolve_device()
             scores: List[float] = []
@@ -229,6 +239,9 @@ class CrossEncoderRerankerProvider(BaseRerankerProvider):
                         batch_scores = [batch_scores]
                     scores.extend(batch_scores)
             return scores
+
+    def score_passages(self, *, query: str, passages: Sequence[str]) -> List[float]:
+        return self._score_pairs([[query, passage] for passage in passages])
 
     def rerank(
         self,
