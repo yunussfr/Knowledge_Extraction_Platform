@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import re
 from typing import Any, Dict
 
@@ -20,6 +21,7 @@ from src.schemas.models import (
     SourceEvaluatorInput,
     SourcePolicy,
     SourceProfile,
+    SourceProfileVerification,
 )
 from src.tools.structured_generation import get_source_evaluation_provider
 from src.tools.web.models import SourcePreview
@@ -522,6 +524,88 @@ def _ensure_registry(
     return registry
 
 
+def _jev_evaluation(state: Dict[str, Any], evaluator_input: SourceEvaluatorInput):
+    """Score only verified profiles; preserve one decision per original candidate."""
+    provider = get_source_evaluation_provider()
+    if not hasattr(provider, "score_relevance"):
+        raise TypeError("Jev evaluator route requires a Jev decision provider.")
+    candidates = evaluator_input.candidate_sources
+    previews = _preview_map(evaluator_input.source_previews)
+    verifications: dict[str, SourceProfileVerification] = {}
+    for raw in state.get("source_profile_verifications", []):
+        item = SourceProfileVerification.model_validate(raw)
+        if item.url in verifications:
+            raise SourceEvaluationIdentityError(f"Duplicate verified profile: {item.url}")
+        verifications[item.url] = item
+    candidate_keys = {_canonical_key(item.get("canonical_url") or item["url"]) for item in candidates}
+    if set(verifications) - candidate_keys:
+        raise SourceEvaluationIdentityError("Verified profiles include an unknown candidate URL.")
+    evaluated: list[EvaluatedSource] = []
+    for candidate in candidates:
+        url = _canonical_key(candidate.get("canonical_url") or candidate["url"])
+        preview = previews.get(url)
+        verified = verifications.get(url)
+        if preview is not None and preview.fetch_success and verified is None:
+            raise SourceEvaluationIdentityError(f"Verified profile missing for candidate: {url}")
+        if verified is not None and verified.candidate_id != candidate.get("candidate_id"):
+            raise SourceEvaluationIdentityError(f"Verified profile changed candidate identity: {url}")
+        if preview is not None and preview.fetch_success and verified and verified.status == "accepted":
+            if verified.source_profile is None:
+                raise ValueError(f"Accepted profile missing source_profile: {url}")
+            if (verified.source_profile.source_type == "unknown"
+                    or set(verified.checks) != {"source_type_supported", "content_supported", "scores_supported"}
+                    or any(not math.isfinite(score)
+                           or score < max(0.80, settings.source_profile_min_support)
+                           or score > 1.0
+                           for score in verified.checks.values())):
+                raise ValueError(f"Accepted profile has insufficient Jev evidence support: {url}")
+            relevance, confidence = provider.score_relevance(
+                preview=preview,
+                topic=evaluator_input.dataset_topic,
+                purpose=evaluator_input.dataset_purpose,
+            )
+            reasons = [*verified.reasons, f"Jev topic/purpose score confidence: {confidence:.3f}."]
+            profile = verified.source_profile
+            emit("source_relevance_scored", source_url=url,
+                 details={"candidate_id": verified.candidate_id, "score": relevance,
+                          "confidence": confidence})
+        else:
+            relevance = 0.0
+            confidence = None
+            profile = SourceProfile(source_type="unknown")
+            reasons = verified.reasons if verified else ["Source preview unavailable; profile verification skipped."]
+            if verified:
+                reasons = [*reasons, "Jev rejected both unsupported source profiles."]
+        item = evaluate_source_for_policy(
+            url=url, profile=profile, topic_relevance_score=relevance,
+            preview=preview, policy=evaluator_input.source_policy,
+            preferred_domains=evaluator_input.preferred_domains,
+            allowed_domains=evaluator_input.allowed_domains,
+            blocked_domains=evaluator_input.blocked_domains,
+            model_reasons=reasons, relevance_weight=0.60, policy_weight=0.40,
+        )
+        evaluated.append(item.model_copy(update={
+            "candidate_id": candidate.get("candidate_id"),
+            "profile_provider": verified.provider if verified else None,
+            "profile_verification_checks": verified.checks if verified else {},
+            "profile_verification_attempts": verified.attempts if verified else [],
+            "topic_purpose_confidence": confidence,
+        }))
+    maximum = state.get("config", {}).get("research", {}).get("max_sources", len(evaluated))
+    evaluation = _compatibility_result(evaluated, max_sources=maximum)
+    profile_metrics = state.get("source_profile_metrics", {})
+    relevance_metrics = provider.metrics()
+    metrics = {**profile_metrics, **relevance_metrics,
+               "jev_profile_check_calls": profile_metrics.get("jev_calls", 0),
+               "jev_relevance_score_calls": relevance_metrics.get("jev_calls", 0),
+               "jev_calls": profile_metrics.get("jev_calls", 0) + relevance_metrics.get("jev_calls", 0),
+               "candidate_count": len(candidates),
+               "scored_candidates": sum(item.status == "accepted" for item in verifications.values()),
+               "profile_rejections": sum(item.status == "rejected" for item in verifications.values()),
+               "scoring_weights": {"topic_purpose": 0.60, "policy": 0.40}}
+    return evaluation, metrics, provider
+
+
 def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
     """Evaluate every supplied candidate from bounded evidence and explicit policy."""
     provider = None
@@ -535,7 +619,9 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
         if not candidates:
             raise ValueError("No candidate sources were found for evaluation.")
 
-        if settings.data_source_provider == "mock":
+        if settings.source_evaluator_provider == "jev" and settings.data_source_provider != "mock":
+            evaluation, source_evaluation_metrics, provider = _jev_evaluation(state, evaluator_input)
+        elif settings.data_source_provider == "mock":
             evaluation = _mock_evaluation(state)
             source_evaluation_metrics = {
                 "provider": "mock",
@@ -679,6 +765,7 @@ def source_evaluator_node(state: Dict[str, Any]) -> Dict[str, Any]:
             "pipeline_status": "sources_evaluated",
         }
     except Exception as error:
+        emit("source_evaluation_error", status="error", details={"error": str(error)})
         return {
             "source_evaluation_metrics": _evaluation_provider_metrics(
                 provider,

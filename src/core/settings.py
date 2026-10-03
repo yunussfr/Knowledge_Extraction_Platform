@@ -71,6 +71,10 @@ class Settings:
     source_evaluator_benchmark_approved: bool = _boolean(
         "SOURCE_EVALUATOR_BENCHMARK_APPROVED", False
     )
+    jev_api_key: str | None = os.getenv("JEV_API_KEY")
+    jev_model: str = os.getenv("JEV_MODEL", "jev-latest")
+    jev_api_url: str = os.getenv("JEV_API_URL", "https://api.typesafe.ai/v1/systemone")
+    source_profile_min_support: float = _float("SOURCE_PROFILE_MIN_SUPPORT", 0.80)
     reranker_provider: str = os.getenv("RERANKER_PROVIDER", "cross_encoder").strip().lower()
     reranker_model: str = os.getenv("RERANKER_MODEL", "BAAI/bge-reranker-v2-m3")
     reranker_min_score: float = _float("RERANKER_MIN_SCORE", 0.60)
