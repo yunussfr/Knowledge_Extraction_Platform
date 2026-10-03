@@ -138,7 +138,8 @@ Evaluation answers:
 
 > How useful is this source for this request?
 
-In the current iteration both are handled inside `SourceEvaluator` to avoid a second LLM call.
+The legacy Groq/Ollama evaluator handles both in one call. The opt-in Jev route
+separates Gemma profile generation, Jev evidence verification, and Jev scoring.
 
 There is no separate SourceClassifier agent yet.
 
@@ -784,7 +785,22 @@ SourceEvaluator
         -> benchmark-approved OllamaStructuredProvider
 ```
 
-The local evaluator must use strict JSON Schema output, preserve the ordered
+With `SOURCE_EVALUATOR_PROVIDER=jev`, the source-only graph route is
+`source_preview -> source_profile_generation -> source_profile_verification ->
+source_evaluator` for live data providers. `DATA_SOURCE_PROVIDER=mock` retains
+the deterministic offline evaluator. Source preview ranks non-overlapping passages from full page
+Markdown with the local BGE reranker and keeps up to
+`CRAWL4AI_PREVIEW_MAX_WORDS` words in page order. Word ranges identify their
+positions in that Markdown. Gemma proposes profiles in
+`SOURCE_EVALUATION_BATCH_SIZE` groups. Jev checks source type, content/depth,
+and profile scores against the same preview; all three support probabilities
+must be at least 0.80. An unsupported candidate gets one Groq profile and Jev
+recheck. If that also fails, only that candidate is rejected. A Jev API failure
+fails the visible evaluation stage rather than being treated as weak evidence.
+The existing owner-managed evaluator prompt is unchanged; profile generation
+has its own typed output and evidence-only instructions.
+
+The legacy local evaluator must use strict JSON Schema output, preserve the ordered
 candidate batch, return every supplied URL exactly once, and pass the frozen
 source-policy benchmark before activation. Cloud fallback is explicit and
 disabled by default so a local failure cannot silently reintroduce provider
@@ -796,6 +812,14 @@ stored in `source_evaluation_metrics` and projected into the run manifest.
 ## 15. Request-Specific Source Evaluation
 
 The same source may legitimately score differently under different SourcePolicies.
+
+In the Jev route, Jev scores only topic and dataset-purpose relevance. Code
+calculates the policy alignment from the verified profile and explicit policy:
+`final_score = 0.60 * topic_purpose_relevance + 0.40 * policy_alignment`.
+Explicit domain, source-type, and minimum-depth restrictions still reject
+regardless of score. Legacy Groq/Ollama evaluation retains its existing
+0.55/0.45 weights. Jev evaluations serialize the profile provider, verification
+checks and attempts, and score confidence alongside the final decision.
 
 Live evaluation is performed sequentially in bounded candidate batches (10 by
 default). Each request receives only that batch's matching previews plus compact

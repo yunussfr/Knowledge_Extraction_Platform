@@ -6,7 +6,7 @@
 |---|---|
 | Current Phase | Phase 27 — Current Iteration Final Acceptance |
 | Phase Status | COMPLETED |
-| Last Updated | 2026-09-05 |
+| Last Updated | 2026-10-03 |
 | Architecture Reference | docs/ARCHITECTURE.md |
 | Rules Reference | docs/RULES.md |
 | Phase Plan Reference | docs/PHASES.md |
@@ -14,6 +14,49 @@
 ---
 
 ## Post-Acceptance Reliability Updates
+
+- 2026-10-03 — Audited the opt-in Jev route for incomplete fallback and resume
+  behavior. A missing Groq configuration now rejects only the affected
+  candidate, accepted profile checks are revalidated before scoring, and
+  duplicate or unknown profile proposals are rejected. The live frozen-set
+  runner now reports the same acceptance gate as the saved Gemma baseline.
+  Focused Jev/provider/cache checks passed (`20 passed`), and the adjacent
+  policy-aware/preview suite passed (`24 passed, 3 deselected`, excluding
+  one existing score-normalization mismatch and two slow Crawl4AI provider
+  tests). Live model-quality
+  comparison remains pending the user's Jev key and local model run.
+
+- 2026-10-02 — Added an opt-in Jev SourceEvaluator route. It ranks full-page
+  Markdown passages with the existing local BGE reranker, keeps at most the
+  configured preview word count in original page order with word ranges, and
+  retains `SOURCE_EVALUATION_BATCH_SIZE`. Gemma proposes typed source profiles;
+  Jev checks source type, content/depth, and profile scores with a minimum
+  support probability of 0.80 each. Only an unsupported candidate receives a
+  Groq profile and second Jev check. Two unsupported profiles reject that
+  candidate; a Jev API failure fails the visible stage. Jev scores topic and
+  purpose, while code calculates policy alignment and combines them 0.60/0.40;
+  hard policy restrictions still reject independently. Legacy evaluator routing
+  and its 0.55/0.45 weights remain available. Provider steps, fallback, scores,
+  and rejections are emitted to `--watch-web` and run metrics. `JEV_API_KEY`,
+  `JEV_MODEL`, and the opt-in route are documented in `.env.example`.
+- Verification: new Jev route tests and adjacent provider/cache tests passed
+  (`20 passed` after the follow-up audit); the graph compiled,
+  `compileall -q src scripts tests` and
+  `git diff --check` passed. The frozen 24-candidate, two-policy comparison
+  runner is `scripts/run_source_evaluator_jev_benchmark.py` and reports useful
+  selection recall, P@5/P@10, policy accuracy, hard-policy violations,
+  profile outcomes, and provider calls against the saved Gemma baseline.
+  With the provider and key configured, run
+  `.venv\Scripts\python.exe -m scripts.run_source_evaluator_jev_benchmark --save docs/baselines/source_evaluator_jev_benchmark.json`.
+  Live Jev/Gemma comparison is pending because `JEV_API_KEY` is not configured
+  in this environment; no new model-quality result is claimed. The unfiltered
+  offline suite stopped during collection because two older test modules import
+  missing `scripts.run_phase1_evaluation` and
+  `scripts.capture_phase0_baseline` files. A rerun excluding those modules
+  did not complete in this environment and was interrupted after stalling near
+  the schema-approval resume tests; the resume test also stalled when run alone.
+  An existing policy test expects score 1.1 to
+  raise validation, while the current `SourceProfile` validator normalizes it.
 
 - 2026-09-16 — BGE-Reranker-v2-m3 Cross-Encoder candidate pre-filtering was added
   between `source_search` and `source_preview`. Candidates are scored against the
