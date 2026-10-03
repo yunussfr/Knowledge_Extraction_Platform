@@ -28,6 +28,9 @@ class AgentState(TypedDict):
     source_registry: Dict[str, Dict[str, Any]]
     candidate_sources: List[Dict[str, Any]]
     source_previews: List[Dict[str, Any]]
+    source_profile_proposals: List[Dict[str, Any]]
+    source_profile_verifications: List[Dict[str, Any]]
+    source_profile_metrics: Dict[str, Any]
     source_evaluations: List[Dict[str, Any]]
     source_evaluation_metrics: Dict[str, Any]
     source_selections: List[Dict[str, Any]]
@@ -113,6 +116,9 @@ def create_initial_state(domain: str, config: Dict[str, Any]) -> AgentState:
         "source_registry": {},
         "candidate_sources": [],
         "source_previews": [],
+        "source_profile_proposals": [],
+        "source_profile_verifications": [],
+        "source_profile_metrics": {},
         "source_evaluations": [],
         "source_evaluation_metrics": {},
         "source_selections": [],

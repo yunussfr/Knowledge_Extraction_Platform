@@ -15,6 +15,7 @@ from src.schemas.models import DiscoveryOrigin
 from src.tools.web import get_acquisition_provider
 from src.tools.web.models import AcquiredDocument, SourcePreview
 from src.tools.web.preview_builder import build_source_preview
+from src.tools.reranker.reranker_provider import MockRerankerProvider
 
 
 logger = get_logger(__name__)
@@ -49,7 +50,7 @@ def _ensure_registry(
     return registry
 
 
-def _mock_preview(candidate: dict[str, Any]) -> SourcePreview:
+def _mock_preview(candidate: dict[str, Any], *, query: str = "") -> SourcePreview:
     if "content" in candidate:
         content = str(candidate.get("content") or "")
     else:
@@ -75,7 +76,21 @@ def _mock_preview(candidate: dict[str, Any]) -> SourcePreview:
     return build_source_preview(
         document,
         max_words=settings.crawl4ai_preview_max_words,
+        query=query,
+        scorer=MockRerankerProvider(),
     )
+
+
+def _selection_query(state: Dict[str, Any], candidate: dict[str, Any]) -> str:
+    policy = state.get("source_policy") or state.get("config", {}).get("sources", {}).get("source_policy") or {}
+    desired = (policy.get("desired_content") or []) if isinstance(policy, dict) else []
+    parts = [
+        str(state.get("dataset_topic") or ""),
+        str(state.get("dataset_purpose") or ""),
+        *[str(value) for value in desired],
+        str(candidate.get("search_query") or ""),
+    ]
+    return " ".join(part.strip() for part in parts if part.strip())[:1500]
 
 
 def source_preview_node(state: Dict[str, Any]) -> Dict[str, Any]:
@@ -99,17 +114,23 @@ def source_preview_node(state: Dict[str, Any]) -> Dict[str, Any]:
         logger.info("Building bounded previews for %d canonical sources.", len(candidates))
         for candidate in candidates:
             url = candidate.get("canonical_url") or candidate["url"]
+            query = _selection_query(state, candidate)
             preview = cached.get(url)
+            expected_hash = sha256(query.encode("utf-8")).hexdigest() if query else ""
+            if (preview is not None and preview.selection_context_hash != expected_hash
+                    and not (preview.approximate_word_count <= settings.crawl4ai_preview_max_words
+                             and preview.preview_word_count >= preview.approximate_word_count)):
+                preview = None
             if preview is None:
                 if settings.data_source_provider == "mock":
-                    preview = _mock_preview(candidate)
+                    preview = _mock_preview(candidate, query=query)
                 else:
                     if provider is None:
                         provider = get_acquisition_provider()
                     try:
                         preview = provider.preview(
                             url,
-                            query=candidate.get("search_query") or None,
+                            query=query or None,
                         )
                     except Exception as exc:
                         preview = SourcePreview(

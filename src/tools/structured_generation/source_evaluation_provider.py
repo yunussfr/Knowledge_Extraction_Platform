@@ -150,5 +150,8 @@ class SourceEvaluationRoutingProvider:
         }
 
 
-def get_source_evaluation_provider() -> SourceEvaluationRoutingProvider:
+def get_source_evaluation_provider() -> SourceEvaluationRoutingProvider | "JevDecisionProvider":
+    if settings.source_evaluator_provider == "jev":
+        from src.tools.structured_generation.jev_provider import JevDecisionProvider
+        return JevDecisionProvider()
     return SourceEvaluationRoutingProvider()

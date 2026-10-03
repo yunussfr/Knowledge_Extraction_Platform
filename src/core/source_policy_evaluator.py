@@ -116,6 +116,8 @@ def evaluate_source_for_policy(
     allowed_domains: list[str] | None = None,
     blocked_domains: list[str] | None = None,
     model_reasons: list[str] | None = None,
+    relevance_weight: float = 0.55,
+    policy_weight: float = 0.45,
 ) -> EvaluatedSource:
     """Apply only explicit hard rules and deterministic soft policy weighting."""
     hard_reasons = _hard_rejection_reasons(
@@ -132,7 +134,9 @@ def evaluate_source_for_policy(
         preferred_domains=preferred_domains or [],
     )
     relevance = max(0.0, min(1.0, float(topic_relevance_score)))
-    final_score = round((0.55 * relevance) + (0.45 * alignment), 6)
+    if relevance_weight < 0 or policy_weight < 0 or abs(relevance_weight + policy_weight - 1.0) > 1e-9:
+        raise ValueError("Source evaluation weights must be nonnegative and sum to one.")
+    final_score = round((relevance_weight * relevance) + (policy_weight * alignment), 6)
     preview_success = bool(preview and preview.fetch_success)
     reasons = list(model_reasons or [])
     for reason in [*hard_reasons, *policy_reasons]:

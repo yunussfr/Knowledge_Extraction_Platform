@@ -10,6 +10,7 @@ from langgraph.graph import END, StateGraph
 
 from src.observability.events import current_journal, emit, observed_node, publish_node_update
 from src.core.logging import get_logger
+from src.core.settings import settings
 from src.agents.nodes.acquisition_node import acquisition_node
 from src.agents.nodes.classification_node import classification_node
 from src.agents.nodes.chunking_node import chunking_node
@@ -33,6 +34,7 @@ from src.agents.nodes.research_planner_node import research_planner_node
 from src.agents.nodes.source_reranker_node import source_reranker_node
 from src.agents.nodes.source_evaluator_node import source_evaluator_node
 from src.agents.nodes.source_preview_node import source_preview_node
+from src.agents.nodes.source_profile_node import source_profile_generation_node, source_profile_verification_node
 from src.agents.nodes.site_exploration_node import site_exploration_node
 from src.agents.nodes.source_selector_node import source_selector_node
 from src.agents.nodes.source_search_node import source_search_node
@@ -92,6 +94,12 @@ def _next_or_end(next_node: str):
     return route
 
 
+def _after_preview(state: AgentState) -> str:
+    if state.get("status") in {"failed", "cancelled"}:
+        return END
+    return "source_profile_generation" if settings.source_evaluator_provider == "jev" and settings.data_source_provider != "mock" else "source_evaluator"
+
+
 def _validate_draft_schema(draft: DraftDatasetSchema) -> None:
     names = [field.field_name for field in draft.fields]
     if len(names) != len(set(names)):
@@ -116,6 +124,8 @@ class DatasetGenerationPipeline:
         add_node("source_search", source_search_node)
         add_node("source_reranker", source_reranker_node)
         add_node("source_preview", source_preview_node)
+        add_node("source_profile_generation", source_profile_generation_node)
+        add_node("source_profile_verification", source_profile_verification_node)
         add_node("source_evaluator", source_evaluator_node)
         add_node("site_exploration", site_exploration_node)
         add_node("source_selector", source_selector_node)
@@ -158,7 +168,9 @@ class DatasetGenerationPipeline:
         workflow.add_conditional_edges("research_planner", _next_or_end("source_search"), {"source_search": "source_search", END: END})
         workflow.add_conditional_edges("source_search", _next_or_end("source_reranker"), {"source_reranker": "source_reranker", END: END})
         workflow.add_conditional_edges("source_reranker", _next_or_end("source_preview"), {"source_preview": "source_preview", END: END})
-        workflow.add_conditional_edges("source_preview", _next_or_end("source_evaluator"), {"source_evaluator": "source_evaluator", END: END})
+        workflow.add_conditional_edges("source_preview", _after_preview, {"source_profile_generation": "source_profile_generation", "source_evaluator": "source_evaluator", END: END})
+        workflow.add_conditional_edges("source_profile_generation", _next_or_end("source_profile_verification"), {"source_profile_verification": "source_profile_verification", END: END})
+        workflow.add_conditional_edges("source_profile_verification", _next_or_end("source_evaluator"), {"source_evaluator": "source_evaluator", END: END})
         workflow.add_conditional_edges("source_evaluator", _next_or_end("site_exploration"), {"site_exploration": "site_exploration", END: END})
         workflow.add_conditional_edges("site_exploration", _next_or_end("source_selector"), {"source_selector": "source_selector", END: END})
         workflow.add_conditional_edges("source_selector", _next_or_end("checkpoint_sources"), {"checkpoint_sources": "checkpoint_sources", END: END})

@@ -495,6 +495,27 @@ class SourceProfile(BaseModel):
         return 1.0
 
 
+class SourceProfileProposal(BaseModel):
+    url: str
+    candidate_id: Optional[str] = None
+    source_profile: SourceProfile
+
+
+class SourceProfileBatch(BaseModel):
+    profiles: List[SourceProfileProposal] = Field(default_factory=list)
+
+
+class SourceProfileVerification(BaseModel):
+    url: str
+    candidate_id: Optional[str] = None
+    source_profile: Optional[SourceProfile] = None
+    status: Literal["accepted", "rejected"]
+    provider: str = ""
+    checks: Dict[str, float] = Field(default_factory=dict)
+    attempts: List[Dict[str, Any]] = Field(default_factory=list)
+    reasons: List[str] = Field(default_factory=list)
+
+
 class EvaluatedSource(BaseModel):
     """Reusable profile plus request-specific policy evaluation."""
 
@@ -508,6 +529,10 @@ class EvaluatedSource(BaseModel):
     decision: Literal["select", "reject"] = "reject"
     reasons: List[str] = Field(default_factory=list)
     preview_success: bool = True
+    profile_provider: Optional[str] = None
+    profile_verification_checks: Dict[str, float] = Field(default_factory=dict)
+    profile_verification_attempts: List[Dict[str, Any]] = Field(default_factory=list)
+    topic_purpose_confidence: Optional[float] = None
     duplicate_of: Optional[str] = None
 
     @field_validator("topic_relevance_score", mode="before")

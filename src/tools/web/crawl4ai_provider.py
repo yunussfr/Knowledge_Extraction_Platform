@@ -50,6 +50,7 @@ class Crawl4AIAcquisitionProvider:
         preview_max_words: int | None = None,
         batch_concurrency: int | None = None,
         batch_delay_seconds: float | None = None,
+        passage_scorer: Any | None = None,
     ) -> None:
         self._result_loader = result_loader
         self._exploration_loader = exploration_loader
@@ -84,6 +85,7 @@ class Crawl4AIAcquisitionProvider:
             else batch_delay_seconds
         )
         self._preview_cache: dict[tuple[str, str], SourcePreview] = {}
+        self._passage_scorer = passage_scorer
 
         if self.cache_mode not in self.SUPPORTED_CACHE_MODES:
             supported = ", ".join(sorted(self.SUPPORTED_CACHE_MODES))
@@ -108,7 +110,19 @@ class Crawl4AIAcquisitionProvider:
             return cached.model_copy(deep=True)
 
         document = self._acquire_document(url, query=query)
-        preview = build_source_preview(document, max_words=self.preview_max_words)
+        scorer = self._passage_scorer
+        content = document.raw_markdown or document.fit_markdown
+        if query and len(content.split()) > self.preview_max_words and scorer is None:
+            from src.tools.reranker import get_reranker_provider
+            scorer = self._passage_scorer = get_reranker_provider()
+            if settings.source_evaluator_provider == "jev":
+                from src.tools.reranker.reranker_provider import CrossEncoderRerankerProvider
+                if not isinstance(scorer, CrossEncoderRerankerProvider):
+                    raise RuntimeError("Jev source previews require the configured local BGE reranker.")
+        preview = build_source_preview(
+            document, max_words=self.preview_max_words,
+            query=query or "", scorer=scorer,
+        )
         self._preview_cache[cache_key] = preview
         return preview.model_copy(deep=True)
 
