@@ -44,11 +44,8 @@ gibi tamamen farklı alanlar için yeniden kullanılabilecektir.
 
 Uzun vadede hedef; yüksek kaliteli veri kümeleri üretebilen, agent tabanlı iş akışlarını destekleyen, farklı yapay zekâ sistemleri tarafından doğrudan kullanılabilecek bilgi tabanları oluşturabilen ve Advanced RAG, Knowledge Graph, Agentic AI ve benzeri sistemlere güvenilir veri altyapısı sağlayan genel amaçlı bir bilgi edinme platformu geliştirmektir.
 ### Kapsam Dışı Hedefler
-
-- Belirli bir bilgi alanına özel iş mantığının çekirdek mimariye gömülmesi.
-- Kullanıcı arayüzü (UI/UX) geliştirme.
 - Bilgiyi son kullanıcıya sunan bir uygulama katmanı inşa etmek (platform yalnızca yapılandırılmış çıktı üretir).
-- Agent orkestrasyonunu gizleyen çerçevelerin kullanılması (bkz. `01_DEVELOPMENT_RULES`).
+- Agent orkestrasyonunu gizleyen çerçevelerin kullanılması.
 
 ### Başarı Kriteri
 

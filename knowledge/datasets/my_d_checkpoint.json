@@ -1,0 +1,1396 @@
+{
+  "domain": "turkish_culture",
+  "config": {
+    "dataset": {
+      "name": "my_d",
+      "topic": "Türkiyenin kültürü ,tarihi , edebiyatı ve müzik geleneği .",
+      "purpose": "Ben bir LLM fine-tuning dataset oluşturmak istiyorum. Bu dataset, Türk kültürü, tarihi, edebiyatı, müziği, gelenekleri ve insanlarının tarihini kapsayan bilgileri içerecek. Ayrıca bu ülkenin bilinirliğini artıracak zaferler ve kültürel temelleri ile inançlarını da içerecek. Konuşma biçimleri ve davranışlarının sinerjisi de bu datasetin bir parçası olacak.",
+      "profile": "structured"
+    },
+    "research": {
+      "max_sources": 2,
+      "constraints": "The sources must be authoritative and reliable, such as government websites, academic publications, and reputable news outlets.\n",
+      "queries": 2,
+      "auto_generate_queries": true
+    },
+    "sources": {
+      "seed_urls": [],
+      "preferred_domains": [],
+      "allowed_domains": null,
+      "blocked_domains": null,
+      "source_policy": {
+        "preferred_source_types": [],
+        "allowed_source_types": null,
+        "blocked_source_types": null,
+        "desired_content": [],
+        "avoided_content": [],
+        "minimum_content_depth": null,
+        "importance": {
+          "authority": "medium",
+          "technical_depth": "low",
+          "information_density": "high",
+          "recency": "low",
+          "extractability": "high"
+        }
+      }
+    },
+    "site_exploration": {
+      "enabled": false,
+      "max_seed_domains": 5,
+      "max_depth": 5,
+      "max_pages_per_domain": 25,
+      "same_domain_only": true
+    },
+    "schema": {
+      "require_user_approval": true
+    },
+    "extraction": {
+      "chunking": {
+        "enabled": true,
+        "target_tokens": 8000,
+        "overlap_tokens": 300
+      }
+    },
+    "quality": {
+      "minimum_confidence": 0.1,
+      "low_confidence_action": "review"
+    },
+    "output": {
+      "format": "json"
+    },
+    "mock_sources": []
+  },
+  "dataset_name": "my_d",
+  "dataset_topic": "Türkiyenin kültürü ,tarihi , edebiyatı ve müzik geleneği .",
+  "dataset_purpose": "Ben bir LLM fine-tuning dataset oluşturmak istiyorum. Bu dataset, Türk kültürü, tarihi, edebiyatı, müziği, gelenekleri ve insanlarının tarihini kapsayan bilgileri içerecek. Ayrıca bu ülkenin bilinirliğini artıracak zaferler ve kültürel temelleri ile inançlarını da içerecek. Konuşma biçimleri ve davranışlarının sinerjisi de bu datasetin bir parçası olacak.",
+  "source_policy": {
+    "preferred_source_types": [],
+    "allowed_source_types": null,
+    "blocked_source_types": null,
+    "desired_content": [],
+    "avoided_content": [],
+    "minimum_content_depth": null,
+    "importance": {
+      "authority": "medium",
+      "technical_depth": "low",
+      "information_density": "high",
+      "recency": "low",
+      "extractability": "high"
+    }
+  },
+  "research_plan": {
+    "research_topic": "Türkiye'nin kültürü, tarihi, edebiyatı ve müzik geleneği",
+    "subtopics": [
+      "Türk tarihi ve zaferler",
+      "Türk edebiyatı ve gelenekleri",
+      "Türk müziği ve kültürel temeller",
+      "Türk inançları ve davranış biçimleri"
+    ],
+    "search_queries": [
+      "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+      "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri"
+    ],
+    "preferred_source_types": [
+      "Government websites",
+      "Academic publications",
+      "Reputable news outlets"
+    ],
+    "excluded_source_types": [],
+    "query_families": [
+      {
+        "name": "Tarihi ve Kültürel Miras",
+        "purpose": "Türkiye'nin tarihi zaferleri, kültürel temelleri ve edebi geleneklerini kapsayan akademik ve resmi kaynakları bulmak",
+        "queries": [
+          "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar"
+        ]
+      },
+      {
+        "name": "Müzik, İnanç ve Toplumsal Davranış",
+        "purpose": "Türk müziği, inançları ve toplumsal davranış kalıplarını inceleyen güvenilir haber ve araştırma makalelerini bulmak",
+        "queries": [
+          "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri"
+        ]
+      }
+    ]
+  },
+  "source_registry": {
+    "https://erdem.gov.tr/tam-metin/32/tur": {
+      "canonical_url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "original_urls": [
+        "https://erdem.gov.tr/tam-metin/32/tur"
+      ],
+      "domain": "erdem.gov.tr",
+      "title": "Tarihi Coğrafya ve Kültürel Miras | 2018, Sayı 75 - Erdem",
+      "description": "Genel bir ifadeyle kültürel miras, geçmişte yaşayan topluluklardan miras alınan tüm kültürel unsurları kapsadığından, kendisine “geçmiş mekânı” inceleme sahası ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "government",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'tarihi_coğrafya_ve_kültürel_miras'_published_by_erdem_(a_government_entity).",
+          "it_provides_a_comprehensive_definition_of_cultural_heritage,_listing_elements_such_as_traditions,_folklore,_religious_beliefs,_music,_dance,_and_food_habits_as_components_of_culture.",
+          "the_text_emphasizes_the_importance_of_researching_and_preserving_turkey's_vast_cultural_potential,_referencing_official_bodies_like_the_ministry_of_culture_and_tourism.",
+          "the_content_is_highly_relevant_to_the_research_topic_as_it_covers_the_cultural,_historical,_and_traditional_aspects_of_turkey."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "published_by_a_government_domain_(.gov.tr).",
+          "references_official_policies_and_institutions_(e.g.,_ministry_of_culture_and_tourism)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.75,
+        "technical_depth_score": 0.3,
+        "recency_score": 0.4,
+        "extractability_score": 0.9
+      },
+      "policy_evaluation": {
+        "url": "https://erdem.gov.tr/tam-metin/32/tur",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.75,
+        "final_score": 0.86,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly relevant and authoritative, but the request asks for a final evaluation, not a rejection. The source meets the criteria for a high-quality, authoritative overview of cultural heritage, which is a core part of the research topic. The initial 'rejection' in the thought process was a placeholder error; the source should be accepted as highly valuable.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_3",
+      "reranker_score": 0.5112
+    },
+    "https://dergipark.org.tr/tr/download/article-file/3963587": {
+      "canonical_url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "original_urls": [
+        "https://dergipark.org.tr/tr/download/article-file/3963587"
+      ],
+      "domain": "dergipark.org.tr",
+      "title": "[PDF] TDE 10 DERS KİTABININ SOMUT OLMAYAN KÜLTÜREL MİRAS ...",
+      "description": "Türk kültürünün önemli geleneklerinden biri olan Türk kahvesi ve geleneği, Türkiye'nin Somut Olmayan Kültürel Miras Listesi'nde 11. sırada yer almaktadır ve ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "failed",
+      "evaluation_status": "completed",
+      "selection_state": "rejected",
+      "selected": false,
+      "rejection_reasons": [
+        "Source preview failed; skipped model-based source characterization.",
+        "Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'",
+        "Source preview failed; skipped model-based source characterization.; Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+      ],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "unknown",
+        "content_characteristics": [],
+        "content_depth": "unknown",
+        "authority_signals": [],
+        "authority_score": 0.5,
+        "information_density_score": 0.5,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.5
+      },
+      "policy_evaluation": {
+        "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+        "candidate_id": null,
+        "topic_relevance_score": 0.0,
+        "policy_alignment_score": 0.5,
+        "final_score": 0.225,
+        "hard_policy_rejected": false,
+        "decision": "reject",
+        "reasons": [
+          "Source preview failed; skipped model-based source characterization.",
+          "Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+        ],
+        "preview_success": false,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_1",
+      "reranker_score": 0.5492
+    },
+    "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf": {
+      "canonical_url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "original_urls": [
+        "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf"
+      ],
+      "domain": "iletisimvesanat.com",
+      "title": "[PDF] Kültürel değerler eğitimi bağlamında geleneksel Türk müziği",
+      "description": "Özet: Bu çalışmanın amacı kültürel değerler eğitimi bağlamında geleneksel Türk müziği üzerine bir değerlendirme yapmaktır. Geleneksel Türk Müziği köklü ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "rejected",
+      "selected": false,
+      "rejection_reasons": [
+        "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.",
+        "Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.",
+        "The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.",
+        "No usable text evidence is available to assess information density or technical depth.",
+        "Does not meet the request-specific relevance and policy score threshold.",
+        "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.; Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.; The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.; No usable text evidence is available to assess information density or technical depth.; Does not meet the request-specific relevance and policy score threshold."
+      ],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "pdf_document",
+          "academic_research_context",
+          "content_inaccessible_due_to_404_error"
+        ],
+        "content_depth": "unknown",
+        "authority_signals": [
+          "domain_is_an_academic_journal_(iletisimvesanat.com)",
+          "metadata_indicates_a_research_paper_on_cultural_values_and_traditional_turkish_music"
+        ],
+        "authority_score": 0.6,
+        "information_density_score": 0.1,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.1
+      },
+      "policy_evaluation": {
+        "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+        "candidate_id": null,
+        "topic_relevance_score": 0.6,
+        "policy_alignment_score": 0.227273,
+        "final_score": 0.432273,
+        "hard_policy_rejected": false,
+        "decision": "reject",
+        "reasons": [
+          "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.",
+          "Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.",
+          "The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.",
+          "No usable text evidence is available to assess information density or technical depth.",
+          "Does not meet the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_2",
+      "reranker_score": 0.5144
+    },
+    "https://dergipark.org.tr/tr/pub/asead/article/871507": {
+      "canonical_url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "original_urls": [
+        "https://dergipark.org.tr/tr/pub/asead/article/871507"
+      ],
+      "domain": "dergipark.org.tr",
+      "title": "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ - DergiPark",
+      "description": "Müzik, yaşadığı toplumun sosyo-kültürel/ekonomik özelliklerinden etkilenmektedir. Bu durum müziğin sosyolojik bir zeminde incelenmesini gerekil ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'kültür_endüstri̇si̇_bağlaminda_popüler_türk_müzi̇ği̇'_published_in_the_journal_'avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi'.",
+          "the_content_utilizes_established_academic_frameworks,_referencing_theorists_like_theodor_adorno_and_max_horkheimer,_and_includes_extensive_scholarly_citations_(e.g.,_adorno,_ayas,_kuyucu).",
+          "the_structure_includes_defined_keywords_(kültür_endüstrisi,_popüler_türk_müziği)_and_multiple_standardized_citation_formats_(ama,_chicago,_ieee,_isnad),_indicating_peer_reviewed_academic_writing."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "publication_in_a_specialized_journal_(avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi).",
+          "use_of_specialized_academic_terminology_(kültür_endüstrisi,_popüler_kültür,_müzik_sosyolojisi)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.9,
+        "technical_depth_score": 0.75,
+        "recency_score": 0.95,
+        "extractability_score": 0.8
+      },
+      "policy_evaluation": {
+        "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.85,
+        "final_score": 0.905,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly academic and theoretical, which is appropriate for scholarly research but may not provide direct, actionable policy recommendations.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_4",
+      "reranker_score": 0.5097
+    }
+  },
+  "candidate_sources": [
+    {
+      "canonical_url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "original_urls": [
+        "https://erdem.gov.tr/tam-metin/32/tur"
+      ],
+      "domain": "erdem.gov.tr",
+      "title": "Tarihi Coğrafya ve Kültürel Miras | 2018, Sayı 75 - Erdem",
+      "description": "Genel bir ifadeyle kültürel miras, geçmişte yaşayan topluluklardan miras alınan tüm kültürel unsurları kapsadığından, kendisine “geçmiş mekânı” inceleme sahası ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "government",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'tarihi_coğrafya_ve_kültürel_miras'_published_by_erdem_(a_government_entity).",
+          "it_provides_a_comprehensive_definition_of_cultural_heritage,_listing_elements_such_as_traditions,_folklore,_religious_beliefs,_music,_dance,_and_food_habits_as_components_of_culture.",
+          "the_text_emphasizes_the_importance_of_researching_and_preserving_turkey's_vast_cultural_potential,_referencing_official_bodies_like_the_ministry_of_culture_and_tourism.",
+          "the_content_is_highly_relevant_to_the_research_topic_as_it_covers_the_cultural,_historical,_and_traditional_aspects_of_turkey."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "published_by_a_government_domain_(.gov.tr).",
+          "references_official_policies_and_institutions_(e.g.,_ministry_of_culture_and_tourism)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.75,
+        "technical_depth_score": 0.3,
+        "recency_score": 0.4,
+        "extractability_score": 0.9
+      },
+      "policy_evaluation": {
+        "url": "https://erdem.gov.tr/tam-metin/32/tur",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.75,
+        "final_score": 0.86,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly relevant and authoritative, but the request asks for a final evaluation, not a rejection. The source meets the criteria for a high-quality, authoritative overview of cultural heritage, which is a core part of the research topic. The initial 'rejection' in the thought process was a placeholder error; the source should be accepted as highly valuable.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_3",
+      "reranker_score": 0.5112,
+      "url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "search_query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl"
+    },
+    {
+      "canonical_url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "original_urls": [
+        "https://dergipark.org.tr/tr/download/article-file/3963587"
+      ],
+      "domain": "dergipark.org.tr",
+      "title": "[PDF] TDE 10 DERS KİTABININ SOMUT OLMAYAN KÜLTÜREL MİRAS ...",
+      "description": "Türk kültürünün önemli geleneklerinden biri olan Türk kahvesi ve geleneği, Türkiye'nin Somut Olmayan Kültürel Miras Listesi'nde 11. sırada yer almaktadır ve ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "failed",
+      "evaluation_status": "completed",
+      "selection_state": "rejected",
+      "selected": false,
+      "rejection_reasons": [
+        "Source preview failed; skipped model-based source characterization.",
+        "Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'",
+        "Source preview failed; skipped model-based source characterization.; Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+      ],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "unknown",
+        "content_characteristics": [],
+        "content_depth": "unknown",
+        "authority_signals": [],
+        "authority_score": 0.5,
+        "information_density_score": 0.5,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.5
+      },
+      "policy_evaluation": {
+        "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+        "candidate_id": null,
+        "topic_relevance_score": 0.0,
+        "policy_alignment_score": 0.5,
+        "final_score": 0.225,
+        "hard_policy_rejected": false,
+        "decision": "reject",
+        "reasons": [
+          "Source preview failed; skipped model-based source characterization.",
+          "Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+        ],
+        "preview_success": false,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_1",
+      "reranker_score": 0.5492,
+      "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "search_query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl"
+    },
+    {
+      "canonical_url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "original_urls": [
+        "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf"
+      ],
+      "domain": "iletisimvesanat.com",
+      "title": "[PDF] Kültürel değerler eğitimi bağlamında geleneksel Türk müziği",
+      "description": "Özet: Bu çalışmanın amacı kültürel değerler eğitimi bağlamında geleneksel Türk müziği üzerine bir değerlendirme yapmaktır. Geleneksel Türk Müziği köklü ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "rejected",
+      "selected": false,
+      "rejection_reasons": [
+        "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.",
+        "Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.",
+        "The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.",
+        "No usable text evidence is available to assess information density or technical depth.",
+        "Does not meet the request-specific relevance and policy score threshold.",
+        "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.; Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.; The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.; No usable text evidence is available to assess information density or technical depth.; Does not meet the request-specific relevance and policy score threshold."
+      ],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "pdf_document",
+          "academic_research_context",
+          "content_inaccessible_due_to_404_error"
+        ],
+        "content_depth": "unknown",
+        "authority_signals": [
+          "domain_is_an_academic_journal_(iletisimvesanat.com)",
+          "metadata_indicates_a_research_paper_on_cultural_values_and_traditional_turkish_music"
+        ],
+        "authority_score": 0.6,
+        "information_density_score": 0.1,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.1
+      },
+      "policy_evaluation": {
+        "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+        "candidate_id": null,
+        "topic_relevance_score": 0.6,
+        "policy_alignment_score": 0.227273,
+        "final_score": 0.432273,
+        "hard_policy_rejected": false,
+        "decision": "reject",
+        "reasons": [
+          "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.",
+          "Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.",
+          "The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.",
+          "No usable text evidence is available to assess information density or technical depth.",
+          "Does not meet the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_2",
+      "reranker_score": 0.5144,
+      "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "search_query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl"
+    },
+    {
+      "canonical_url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "original_urls": [
+        "https://dergipark.org.tr/tr/pub/asead/article/871507"
+      ],
+      "domain": "dergipark.org.tr",
+      "title": "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ - DergiPark",
+      "description": "Müzik, yaşadığı toplumun sosyo-kültürel/ekonomik özelliklerinden etkilenmektedir. Bu durum müziğin sosyolojik bir zeminde incelenmesini gerekil ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'kültür_endüstri̇si̇_bağlaminda_popüler_türk_müzi̇ği̇'_published_in_the_journal_'avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi'.",
+          "the_content_utilizes_established_academic_frameworks,_referencing_theorists_like_theodor_adorno_and_max_horkheimer,_and_includes_extensive_scholarly_citations_(e.g.,_adorno,_ayas,_kuyucu).",
+          "the_structure_includes_defined_keywords_(kültür_endüstrisi,_popüler_türk_müziği)_and_multiple_standardized_citation_formats_(ama,_chicago,_ieee,_isnad),_indicating_peer_reviewed_academic_writing."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "publication_in_a_specialized_journal_(avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi).",
+          "use_of_specialized_academic_terminology_(kültür_endüstrisi,_popüler_kültür,_müzik_sosyolojisi)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.9,
+        "technical_depth_score": 0.75,
+        "recency_score": 0.95,
+        "extractability_score": 0.8
+      },
+      "policy_evaluation": {
+        "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.85,
+        "final_score": 0.905,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly academic and theoretical, which is appropriate for scholarly research but may not provide direct, actionable policy recommendations.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_4",
+      "reranker_score": 0.5097,
+      "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "search_query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl"
+    }
+  ],
+  "source_previews": [
+    {
+      "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "title": "[PDF] TDE 10 DERS KİTABININ SOMUT OLMAYAN KÜLTÜREL MİRAS ...",
+      "domain": "dergipark.org.tr",
+      "headings": [],
+      "relevant_text": "",
+      "approximate_word_count": null,
+      "preview_word_count": 0,
+      "selected_passage_ranges": [],
+      "selection_context_hash": "",
+      "internal_links": [],
+      "external_links": [],
+      "language": null,
+      "publication_date": null,
+      "updated_date": null,
+      "structure_hints": [],
+      "fetch_success": false,
+      "error": "AttributeError: 'NoneType' object has no attribute 'split'"
+    },
+    {
+      "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "title": "Akademik Dergi",
+      "domain": "iletisimvesanat.com",
+      "headings": [
+        "404 Sayfa Bulunamadı",
+        "Keşfet",
+        "Dergi",
+        "İletişim"
+      ],
+      "relevant_text": "",
+      "approximate_word_count": 54,
+      "preview_word_count": 0,
+      "selected_passage_ranges": [],
+      "selection_context_hash": "a8ba423eda28211d18dbce6d65271f8a906adaee020e3f5bbc11bfbc9f5b9e49",
+      "internal_links": [
+        "https://iletisimvesanat.com/",
+        "https://iletisimvesanat.com/issues",
+        "https://iletisimvesanat.com/articles",
+        "https://iletisimvesanat.com/contact",
+        "https://iletisimvesanat.com/for-authors",
+        "https://iletisimvesanat.com/about"
+      ],
+      "external_links": [],
+      "language": null,
+      "publication_date": null,
+      "updated_date": null,
+      "structure_hints": [
+        "headings",
+        "links"
+      ],
+      "fetch_success": true,
+      "error": null
+    },
+    {
+      "url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "title": "Tarihi Coğrafya ve Kültürel Miras | 2018, Sayı 75 |  Erdem",
+      "domain": "erdem.gov.tr",
+      "headings": [
+        "Tarihi Coğrafya ve Kültürel Miras",
+        "Kaynaklar",
+        "Kaynak Göster"
+      ],
+      "relevant_text": "geliştirerek, yeni sentezlerle zenginleştirdiği ve sürekliliğini sağlayarak kendinden sonraki nesillere aktardığı tüm bilgi, inanç ve davranışlar bütünü ile bu bütünün parçası olan nesneler.” olarak tanımlanabilir. Bu hâliyle kültürel miras, bir toplumun üyelerine ortak geçmişlerini anlatarak, aralarındaki dayanışma ve birlik duygularını kuvvetlendiren güçlü bir unsur ve ciddi bir zenginlik kaynağıdır. Şu halde kültürel miras, insanların tarih boyunca biriktirdikleri deneyimlerin ve geleneklerin devamlılığını ve haliyle geleceğin doğru kurulmasını sağlayan önemli bir hazinedir. Böyle olduğu için de kültürel mirasın, sadece sahip olduğu değerler nedeniyle değil, yeni nesillere yeni öğrenme ve gelişme fırsatları sunduğu, insanlara geçmişlerine dair güzel duygular yaşattığı için de korunması ve\n\nkültür değerleri olarak ele alınan gelenekgörenekler, folklorik değerler, dini inanış ve ibadetler, müzik, dans, yeme-içme alışkanlıkları da kültürü oluşturan diğer öğeler arasında bulunmakta ve kültürel turizmi tamamlayan unsurlar olarak ilgi çekmektedir. (Emekli 2006: 56)\nTürkiye, her geçen gün bir parçası daha yok olan ve yeri doldurulması imkansız kültürel mirasına karşı sorumluluğunu, başta üniversiteler ve kamu kurumlarının yaptıkları olmak üzere ilgili tüm sivil toplum kuruluşlarıyla birlikte hareket ederek, öncelikle kültürel mirasın araştırılması ve arkasından da korumaya yönelik kamuoyunu bilgilendirici faaliyetler yerine getirerek göstermek zorundadır. Bu noktadan hareketle, gerek üniversiteler ve diğer kamu kurumları gerekse ulusal veya uluslararası sivil inisiyatifler ve fon\n\ndahi görülemeyen bir merkez, gün ışığına çıkarılarak, Türkiye ve Dünya kültürel mirasına kazandırılmıştır.\nBenzer şekilde, Dünya kültürel mirası açısından aynı derecede önemli olmasa da, Türkiye kültürel mirası bakımından mutlaka belirtilmesi gereken Osmanlı kayıp köylerine temas etmekte fayda vardır. Tarafımızdan yürütülerek tamamlanmış (2013-2016) olan “Türkiye _İskan_ Tarihinde Önemli Bir Problem: Kaybolan Yerleşmeler” isimli TÜBİTAK projesinde yaptığımız araştırmalar ve arazi çalışması bir kez daha göstermiştir ki, “kültürel miras”ımızın tespit edilerek kayıt altına alınmasında, tarihi coğrafya bakış açısının ciddi katkıları olacaktır. Zira şimdiye kadar tamamen bilimsel araştırmalardan uzakta kalmış, coğrafyacılar ve tarihçiler tarafından çalışılmamış olan bu konu sayesinde, -dar bir saha olmasına rağmen-\n\ndisiplinler yanında tarihi coğrafyacılar yetiştirmek için de gerekli eğitim ve araştırma ortamı kurulduktan sonra, bu konunun önem ve zorunluluğunun kamuoyuna anlatılması sağlanmalıdır.\nAncak tüm bunlar gerçekleştirildikten sonra, Kültür ve Turizm Bakanlığı web sayfasında da vurgulandığı gibi; “kültür ve tabiat varlıkları açısından son derece önemli olan ülkemiz, zengin ve büyük bir kültürel potansiyele sahiptir. Ülkemiz arkeolojik zenginliklerimiz açısından başka hiçbir ülkeyle kıyaslanamayacak kadar emsalsiz bir hazine niteliğindedir” (https://www. kultur.gov.tr) ifadesinin sonuçlarından faydalanma imkânımız olacaktır. Böylece, Türkiye’nin sahip olduğu zengin kültürel miras, mekânsal açıdan da ele alınarak, araştırılmalı bilim camiasına, ülke yönetim kademelerindeki karar vericilere, turizm sektörü ile diğer uygulayıcıların hizmetine sunulabilecektir.",
+      "approximate_word_count": 6144,
+      "preview_word_count": 400,
+      "selected_passage_ranges": [
+        [
+          2500,
+          2600
+        ],
+        [
+          4200,
+          4300
+        ],
+        [
+          4900,
+          5000
+        ],
+        [
+          5300,
+          5400
+        ]
+      ],
+      "selection_context_hash": "0d42679307f71f878ef7289150e6d869cfbc42b919966439b1c44abaa962ace5",
+      "internal_links": [
+        "https://erdem.gov.tr/",
+        "https://erdem.gov.tr/tam-metin/32/tur",
+        "https://erdem.gov.tr/sayfa/hakkimizda",
+        "https://erdem.gov.tr/sayfa/amac-ve-kapsam",
+        "https://erdem.gov.tr/sayfa/dergi-kurullari",
+        "https://erdem.gov.tr/sayfa/yazar-rehberi",
+        "https://erdem.gov.tr/sayfa/hakem-rehberi",
+        "https://erdem.gov.tr/sayfa/etik-ilkeler-ve-yayin-politikasi",
+        "https://erdem.gov.tr/sayfa/makale-degerlendirme-sureci",
+        "https://erdem.gov.tr/sayfa/acik-erisim-ve-telif-hakki-politikasi",
+        "https://erdem.gov.tr/sayfa/arsiv-politikasi",
+        "https://erdem.gov.tr/sayfa/ucret-politikasi",
+        "https://erdem.gov.tr/sayfa/ozel-sayi-politikasi",
+        "https://erdem.gov.tr/sayfa/yapay-zeka-politikasi",
+        "https://erdem.gov.tr/sayfa/yazim-kurallari",
+        "https://erdem.gov.tr/iletisim",
+        "https://erdem.gov.tr/ozet/32/tur",
+        "https://erdem.gov.tr/ozet/32/eng",
+        "https://erdem.gov.tr/tam-metin-pdf/32/tur",
+        "https://erdem.gov.tr/benzer-makaleler/32",
+        "https://erdem.gov.tr/sayi/4",
+        "https://erdem.gov.tr/tam-metin/37/tur",
+        "https://erdem.gov.tr/tam-metin/34/tur"
+      ],
+      "external_links": [
+        "http://www.akmb.gov.tr",
+        "https://aris.gov.tr",
+        "https://creativecommons.org/licenses/by-nc/4.0/deed.tr",
+        "https://yazilimparki.com"
+      ],
+      "language": null,
+      "publication_date": null,
+      "updated_date": null,
+      "structure_hints": [
+        "headings",
+        "unordered_list",
+        "ordered_list",
+        "table",
+        "links"
+      ],
+      "fetch_success": true,
+      "error": null
+    },
+    {
+      "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "title": "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ\n    -\n    Avrasya Sosyal ve Ekonomi Araştırmaları Dergisi",
+      "domain": "dergipark.org.tr",
+      "headings": [
+        "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ",
+        "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ",
+        "Öz",
+        "Anahtar Kelimeler",
+        "Kaynakça",
+        "Ayrıntılar",
+        "Birincil Dil",
+        "Konular",
+        "Bölüm",
+        "Yazarlar",
+        "Yayımlanma Tarihi",
+        "Gönderilme Tarihi",
+        "Kabul Tarihi",
+        "Yayımlandığı Sayı",
+        "IZ",
+        "Kaynak Göster",
+        "Kütüphaneme Ekle",
+        "Paylaş",
+        "Lütfen geri bildirimde bulunmak istediğiniz birimi seçin."
+      ],
+      "relevant_text": "etkilenerek değişmiştir. \n##  Anahtar Kelimeler \n  * [Kültür Endüstrisi](/tr/search?q=%22K%C3%BClt%C3%BCr%20End%C3%BCstrisi%22)\n  * [Popüler Türk Müziği](/tr/search?q=%22Pop%C3%BCler%20T%C3%BCrk%20M%C3%BCzi%C4%9Fi%22)\n  * [Popüler Kültür](/tr/search?q=%22Pop%C3%BCler%20K%C3%BClt%C3%BCr%22)\n  * [Popüler Müzik](/tr/search?q=%22Pop%C3%BCler%20M%C3%BCzik%22)\n\n\n##  Kaynakça \n  1. Adorno, Theodor W. (2011). Kültür Endüstrisi-Kültür Yönetimi, çev. Nihat Ülner, Mustafa Tüzel, Elçin Gen, İstanbul: İletişim Yayınları.\n  2. Adorno, Theodor W.,Horkheimer, Max (2010). Aydınlanmanın Diyalektiği, çev. Nihat Ülner, Elif Öztarhan Karadoğan, İstanbul: Kabalcı Yayınevi.\n  3. Ayas, Güneş (2019). Müzik Sosyolojisi: Kuramsal Bir Giriş, İstanbul: İthaki Yayınları.\n  4. Aydar, Deniz (2014). “Popüler Kültür ve Müzik Üzerine”. Uluslararası Sosyal Araştırmalar Dergisi, C. VII, S. 33, s. 800-807.\n  5. Birekul, Mehmet (2015). “Popüler Kültür ve Müzikte Anlamın Kaybı”, Akademik İncelemeler Dergisi, Cilt:10,\n\nSayı:1, s. 155-180.\n  6. Coşgun, Melek (2012). “Popüler Kültür ve Tüketim Toplumu”, Batman Üniversitesi Yaşam Bilimler Dergisi, Cilt: 1, Sayı: 1, s. 837-850.\n  7. Duran, Selçuk (2012). “ Türkiye’de Âşıklık Geleneğinin Popüler Müziklere Etkisi”, Doğu Batı Dergisi, Sayı: 62, s. 225-250.\n  8. Erdoğan, İrfan (2004). “Popüler Kültürün Ne Olduğu Üzerine”, Bilim ve Aklın Aydınlığında Eğitim Dergisi, Yıl:5, Sayı: 57.\n\n\n  1. Erol Işık, Nuran (2018). “Müzik Sosyolojisi Açısından Arabesk Müziğin Dönüşümü”, Sosyoloji Dergisi, Sayı: 38, 89–106.\n  2. Esgin, Ali (2012). “Bir Müzik Sosyolojisi Var mıdır ?”, Doğu Batı Dergisi, Sayı: 62, s. 153-182.\n  3. Gendron, Bernard (2016). “Theodor Adorno Cadillacs’la Tanışıyor”,\n\n9. İlyasoğlu, Evin (2009). Zaman İçinde Müzik, İstanbul: Remzi Kitabevi.\n  10. Kozanoğlu, Can (1995). Pop Çağı Ateşi, İstanbul: İletişim Yayınları.\n  11. Kuyucu, Michael (2016). “Theodor W. Adorno’nun Perspektifinden Popüler Türk Müziğinde Standartlaşma Sorunsalı”, TRT Akademi Dergisi, sayı: 1/1, s. 188-208.\n  12. Mutlu, Erol (2012). “Popüler Kültürü Eleştirmek”, Doğu Batı Dergisi, Sayı: 15, s. 11-44.\n  13. Oskay, Ünsal (1982). Müzik ve Yabancılaşma, Ankara: Dost Kitabevi.\n  14. Solmaz, Metin (1996) Türkiye'de Pop Müzik, İstanbul: Pan Yayıncılık\n  15. Soykan, Ömer Naci (2012). “Müzik Nedir? Felsefi Bir Araştırma”, Doğu Batı Dergisi, Sayı: 62, s. 29-42.\n  16. Slater, Phil (1998). Frankfurt Okulu, Çev.Ahmet Özden, İstabul:\n\n_Avrasya Sosyal ve Ekonomi Araştırmaları Dergisi_ , _8_(2), 144-159. <https://izlik.org/JA76EW78BF>\nAMA\n1.Tan M. KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ. _ASEAD_. 2021;8(2):144-159. <https://izlik.org/JA76EW78BF>\nChicago\nTan, Mehmet. 2021. “KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ”. _Avrasya Sosyal ve Ekonomi Araştırmaları Dergisi_ 8 (2): 144-59. <https://izlik.org/JA76EW78BF>. \nEndNote\nTan M (01 Nisan 2021) KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ. Avrasya Sosyal ve Ekonomi Araştırmaları Dergisi 8 2 144–159. \nIEEE\n[1]M. Tan, “KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ”, _ASEAD_ , c. 8, sy 2, ss. 144–159, Nis. 2021, [çevrimiçi]. Erişim adresi: <https://izlik.org/JA76EW78BF>\nISNAD\nTan, Mehmet. “KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ”. _Avrasya Sosyal ve Ekonomi Araştırmaları",
+      "approximate_word_count": 930,
+      "preview_word_count": 400,
+      "selected_passage_ranges": [
+        [
+          200,
+          300
+        ],
+        [
+          300,
+          400
+        ],
+        [
+          500,
+          600
+        ],
+        [
+          700,
+          800
+        ]
+      ],
+      "selection_context_hash": "a8ba423eda28211d18dbce6d65271f8a906adaee020e3f5bbc11bfbc9f5b9e49",
+      "internal_links": [
+        "/tr/pub/asead/article/871507",
+        "//dergipark.org.tr/tr/",
+        "/tr/user/notification",
+        "https://dergipark.org.tr/tr/login",
+        "//dergipark.org.tr/tr/admin/panel",
+        "//dergipark.org.tr/tr/user/panel",
+        "//dergipark.org.tr/tr/user/publisher/panel",
+        "/tr/journal/my",
+        "//dergipark.org.tr/tr/user-project",
+        "//dergipark.org.tr/tr/user/user-followers",
+        "/",
+        "https://dergipark.org.tr/tr/logout",
+        "/tr/pub/@mehmettan47.",
+        "/tr/pub/asead",
+        "/tr/download/article-file/1545273",
+        "/tr/search?q=%22K%C3%BClt%C3%BCr+End%C3%BCstrisi%22",
+        "/tr/search?q=%22Pop%C3%BCler+T%C3%BCrk+M%C3%BCzi%C4%9Fi%22",
+        "/tr/search?q=%22Pop%C3%BCler+K%C3%BClt%C3%BCr%22",
+        "/tr/search?q=%22Pop%C3%BCler+M%C3%BCzik%22",
+        "/tr/download/article-cite-file/871507/type/6",
+        "/tr/download/article-cite-file/871507/type/2",
+        "/tr/user-project/new",
+        "/tr/pub/asead/archive",
+        "/tr/pub/asead/issue/62195",
+        "/tr/feedback/journal/asead/new"
+      ],
+      "external_links": [
+        "https://izlik.org/JA76EW78BF",
+        "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fdergipark.org.tr%2Ftr%2Fpub%2Fasead%2Farticle%2F871507",
+        "https://wa.me/?text=K%C3%9CLT%C3%9CR+END%C3%9CSTR%C4%B0S%C4%B0+BA%C4%9ELAMINDA+POP%C3%9CLER+T%C3%9CRK+M%C3%9CZ%C4%B0%C4%9E%C4%B0+https%3A%2F%2Fdergipark.org.tr%2Ftr%2Fpub%2Fasead%2Farticle%2F871507",
+        "https://twitter.com/intent/tweet?text=K%C3%9CLT%C3%9CR+END%C3%9CSTR%C4%B0S%C4%B0+BA%C4%9ELAMINDA+POP%C3%9CLER+T%C3%9CRK+M%C3%9CZ%C4%B0%C4%9E%C4%B0&url=https%3A%2F%2Fdergipark.org.tr%2Ftr%2Fpub%2Fasead%2Farticle%2F871507",
+        "https://www.linkedin.com/shareArticle?mini=true&title=K%C3%9CLT%C3%9CR+END%C3%9CSTR%C4%B0S%C4%B0+BA%C4%9ELAMINDA+POP%C3%9CLER+T%C3%9CRK+M%C3%9CZ%C4%B0%C4%9E%C4%B0&url=https%3A%2F%2Fdergipark.org.tr%2Ftr%2Fpub%2Fasead%2Farticle%2F871507",
+        "mailto:?body=https%3A%2F%2Fdergipark.org.tr%2Ftr%2Fpub%2Fasead%2Farticle%2F871507&subject=K%C3%9CLT%C3%9CR+END%C3%9CSTR%C4%B0S%C4%B0+BA%C4%9ELAMINDA+POP%C3%9CLER+T%C3%9CRK+M%C3%9CZ%C4%B0%C4%9E%C4%B0",
+        "https://jira.ulakbim.gov.tr/servicedesk/customer/portal/3"
+      ],
+      "language": null,
+      "publication_date": null,
+      "updated_date": "2021-04-30",
+      "structure_hints": [
+        "headings",
+        "unordered_list",
+        "ordered_list",
+        "links"
+      ],
+      "fetch_success": true,
+      "error": null
+    }
+  ],
+  "source_profile_proposals": [],
+  "source_profile_verifications": [],
+  "source_profile_metrics": {},
+  "source_evaluations": [
+    {
+      "url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "candidate_id": null,
+      "source_profile": {
+        "source_type": "government",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'tarihi_coğrafya_ve_kültürel_miras'_published_by_erdem_(a_government_entity).",
+          "it_provides_a_comprehensive_definition_of_cultural_heritage,_listing_elements_such_as_traditions,_folklore,_religious_beliefs,_music,_dance,_and_food_habits_as_components_of_culture.",
+          "the_text_emphasizes_the_importance_of_researching_and_preserving_turkey's_vast_cultural_potential,_referencing_official_bodies_like_the_ministry_of_culture_and_tourism.",
+          "the_content_is_highly_relevant_to_the_research_topic_as_it_covers_the_cultural,_historical,_and_traditional_aspects_of_turkey."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "published_by_a_government_domain_(.gov.tr).",
+          "references_official_policies_and_institutions_(e.g.,_ministry_of_culture_and_tourism)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.75,
+        "technical_depth_score": 0.3,
+        "recency_score": 0.4,
+        "extractability_score": 0.9
+      },
+      "topic_relevance_score": 0.95,
+      "policy_alignment_score": 0.75,
+      "final_score": 0.86,
+      "hard_policy_rejected": false,
+      "decision": "select",
+      "reasons": [
+        "The source is highly relevant and authoritative, but the request asks for a final evaluation, not a rejection. The source meets the criteria for a high-quality, authoritative overview of cultural heritage, which is a core part of the research topic. The initial 'rejection' in the thought process was a placeholder error; the source should be accepted as highly valuable.",
+        "Meets the request-specific relevance and policy score threshold."
+      ],
+      "preview_success": true,
+      "profile_provider": null,
+      "profile_verification_checks": {},
+      "profile_verification_attempts": [],
+      "topic_purpose_confidence": null,
+      "duplicate_of": null
+    },
+    {
+      "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "candidate_id": null,
+      "source_profile": {
+        "source_type": "unknown",
+        "content_characteristics": [],
+        "content_depth": "unknown",
+        "authority_signals": [],
+        "authority_score": 0.5,
+        "information_density_score": 0.5,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.5
+      },
+      "topic_relevance_score": 0.0,
+      "policy_alignment_score": 0.5,
+      "final_score": 0.225,
+      "hard_policy_rejected": false,
+      "decision": "reject",
+      "reasons": [
+        "Source preview failed; skipped model-based source characterization.",
+        "Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+      ],
+      "preview_success": false,
+      "profile_provider": null,
+      "profile_verification_checks": {},
+      "profile_verification_attempts": [],
+      "topic_purpose_confidence": null,
+      "duplicate_of": null
+    },
+    {
+      "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "candidate_id": null,
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "pdf_document",
+          "academic_research_context",
+          "content_inaccessible_due_to_404_error"
+        ],
+        "content_depth": "unknown",
+        "authority_signals": [
+          "domain_is_an_academic_journal_(iletisimvesanat.com)",
+          "metadata_indicates_a_research_paper_on_cultural_values_and_traditional_turkish_music"
+        ],
+        "authority_score": 0.6,
+        "information_density_score": 0.1,
+        "technical_depth_score": 0.5,
+        "recency_score": null,
+        "extractability_score": 0.1
+      },
+      "topic_relevance_score": 0.6,
+      "policy_alignment_score": 0.227273,
+      "final_score": 0.432273,
+      "hard_policy_rejected": false,
+      "decision": "reject",
+      "reasons": [
+        "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.",
+        "Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.",
+        "The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.",
+        "No usable text evidence is available to assess information density or technical depth.",
+        "Does not meet the request-specific relevance and policy score threshold."
+      ],
+      "preview_success": true,
+      "profile_provider": null,
+      "profile_verification_checks": {},
+      "profile_verification_attempts": [],
+      "topic_purpose_confidence": null,
+      "duplicate_of": null
+    },
+    {
+      "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "candidate_id": null,
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'kültür_endüstri̇si̇_bağlaminda_popüler_türk_müzi̇ği̇'_published_in_the_journal_'avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi'.",
+          "the_content_utilizes_established_academic_frameworks,_referencing_theorists_like_theodor_adorno_and_max_horkheimer,_and_includes_extensive_scholarly_citations_(e.g.,_adorno,_ayas,_kuyucu).",
+          "the_structure_includes_defined_keywords_(kültür_endüstrisi,_popüler_türk_müziği)_and_multiple_standardized_citation_formats_(ama,_chicago,_ieee,_isnad),_indicating_peer_reviewed_academic_writing."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "publication_in_a_specialized_journal_(avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi).",
+          "use_of_specialized_academic_terminology_(kültür_endüstrisi,_popüler_kültür,_müzik_sosyolojisi)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.9,
+        "technical_depth_score": 0.75,
+        "recency_score": 0.95,
+        "extractability_score": 0.8
+      },
+      "topic_relevance_score": 0.95,
+      "policy_alignment_score": 0.85,
+      "final_score": 0.905,
+      "hard_policy_rejected": false,
+      "decision": "select",
+      "reasons": [
+        "The source is highly academic and theoretical, which is appropriate for scholarly research but may not provide direct, actionable policy recommendations.",
+        "Meets the request-specific relevance and policy score threshold."
+      ],
+      "preview_success": true,
+      "profile_provider": null,
+      "profile_verification_checks": {},
+      "profile_verification_attempts": [],
+      "topic_purpose_confidence": null,
+      "duplicate_of": null
+    }
+  ],
+  "source_evaluation_metrics": {
+    "provider": "ollama",
+    "model": "gemma4:e4b-it-qat",
+    "benchmark_approved": true,
+    "cloud_fallback_enabled": true,
+    "local_calls": 3,
+    "cloud_calls": 1,
+    "fallback_calls": 1,
+    "candidate_count": 4,
+    "batch_size": 1,
+    "total_batches": 3,
+    "completed_batches": 3,
+    "model_evaluated_candidates": 3,
+    "deterministic_preview_rejections": 1,
+    "generation_identity_rejections": 0
+  },
+  "source_selections": [
+    {
+      "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "rank": 1,
+      "selection_score": 0.885263,
+      "final_score": 0.905,
+      "domain": "dergipark.org.tr",
+      "source_type": "academic",
+      "selection_reasons": [
+        "Selected from eligible sources by request-specific quality score."
+      ]
+    },
+    {
+      "url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "rank": 2,
+      "selection_score": 0.823158,
+      "final_score": 0.86,
+      "domain": "erdem.gov.tr",
+      "source_type": "government",
+      "selection_reasons": [
+        "Selected from eligible sources by request-specific quality score.",
+        "Adds a useful source-domain diversity contribution.",
+        "Adds a useful source-type diversity contribution."
+      ]
+    }
+  ],
+  "source_selection_metrics": {
+    "evaluated_candidates": 4,
+    "eligible_candidates": 2,
+    "duplicate_candidates": 0,
+    "selected_sources": 2,
+    "unique_selected_domains": 2,
+    "selected_by_domain": {
+      "dergipark.org.tr": 1,
+      "erdem.gov.tr": 1
+    },
+    "selected_by_source_type": {
+      "academic": 1,
+      "government": 1
+    }
+  },
+  "selected_sources": [
+    {
+      "canonical_url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "original_urls": [
+        "https://dergipark.org.tr/tr/pub/asead/article/871507"
+      ],
+      "domain": "dergipark.org.tr",
+      "title": "KÜLTÜR ENDÜSTRİSİ BAĞLAMINDA POPÜLER TÜRK MÜZİĞİ - DergiPark",
+      "description": "Müzik, yaşadığı toplumun sosyo-kültürel/ekonomik özelliklerinden etkilenmektedir. Bu durum müziğin sosyolojik bir zeminde incelenmesini gerekil ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "academic",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'kültür_endüstri̇si̇_bağlaminda_popüler_türk_müzi̇ği̇'_published_in_the_journal_'avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi'.",
+          "the_content_utilizes_established_academic_frameworks,_referencing_theorists_like_theodor_adorno_and_max_horkheimer,_and_includes_extensive_scholarly_citations_(e.g.,_adorno,_ayas,_kuyucu).",
+          "the_structure_includes_defined_keywords_(kültür_endüstrisi,_popüler_türk_müziği)_and_multiple_standardized_citation_formats_(ama,_chicago,_ieee,_isnad),_indicating_peer_reviewed_academic_writing."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "publication_in_a_specialized_journal_(avrasya_sosyal_ve_ekonomi_araştırmaları_dergisi).",
+          "use_of_specialized_academic_terminology_(kültür_endüstrisi,_popüler_kültür,_müzik_sosyolojisi)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.9,
+        "technical_depth_score": 0.75,
+        "recency_score": 0.95,
+        "extractability_score": 0.8
+      },
+      "policy_evaluation": {
+        "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.85,
+        "final_score": 0.905,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly academic and theoretical, which is appropriate for scholarly research but may not provide direct, actionable policy recommendations.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_4",
+      "reranker_score": 0.5097,
+      "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+      "search_query": "Türk müziği, gelenekleri ve toplumsal davranış kalıpları üzerine güvenilir haber ve araştırma makaleleri",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl",
+      "priority": 1,
+      "reason": "Selected from eligible sources by request-specific quality score.",
+      "selection": {
+        "url": "https://dergipark.org.tr/tr/pub/asead/article/871507",
+        "rank": 1,
+        "selection_score": 0.885263,
+        "final_score": 0.905,
+        "domain": "dergipark.org.tr",
+        "source_type": "academic",
+        "selection_reasons": [
+          "Selected from eligible sources by request-specific quality score."
+        ]
+      }
+    },
+    {
+      "canonical_url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "original_urls": [
+        "https://erdem.gov.tr/tam-metin/32/tur"
+      ],
+      "domain": "erdem.gov.tr",
+      "title": "Tarihi Coğrafya ve Kültürel Miras | 2018, Sayı 75 - Erdem",
+      "description": "Genel bir ifadeyle kültürel miras, geçmişte yaşayan topluluklardan miras alınan tüm kültürel unsurları kapsadığından, kendisine “geçmiş mekânı” inceleme sahası ...",
+      "discovery_origins": [
+        {
+          "method": "search",
+          "query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+          "seed_url": null,
+          "parent_url": null,
+          "depth": null,
+          "source_provider": "firecrawl"
+        }
+      ],
+      "user_seed": false,
+      "preview_status": "completed",
+      "evaluation_status": "completed",
+      "selection_state": "selected",
+      "selected": true,
+      "rejection_reasons": [],
+      "source_providers": [
+        "firecrawl"
+      ],
+      "preferred_domain_match": false,
+      "provider_metadata": {},
+      "candidate_metadata": {},
+      "source_profile": {
+        "source_type": "government",
+        "content_characteristics": [
+          "the_source_is_an_article_titled_'tarihi_coğrafya_ve_kültürel_miras'_published_by_erdem_(a_government_entity).",
+          "it_provides_a_comprehensive_definition_of_cultural_heritage,_listing_elements_such_as_traditions,_folklore,_religious_beliefs,_music,_dance,_and_food_habits_as_components_of_culture.",
+          "the_text_emphasizes_the_importance_of_researching_and_preserving_turkey's_vast_cultural_potential,_referencing_official_bodies_like_the_ministry_of_culture_and_tourism.",
+          "the_content_is_highly_relevant_to_the_research_topic_as_it_covers_the_cultural,_historical,_and_traditional_aspects_of_turkey."
+        ],
+        "content_depth": "medium",
+        "authority_signals": [
+          "published_by_a_government_domain_(.gov.tr).",
+          "references_official_policies_and_institutions_(e.g.,_ministry_of_culture_and_tourism)."
+        ],
+        "authority_score": 0.85,
+        "information_density_score": 0.75,
+        "technical_depth_score": 0.3,
+        "recency_score": 0.4,
+        "extractability_score": 0.9
+      },
+      "policy_evaluation": {
+        "url": "https://erdem.gov.tr/tam-metin/32/tur",
+        "candidate_id": null,
+        "topic_relevance_score": 0.95,
+        "policy_alignment_score": 0.75,
+        "final_score": 0.86,
+        "hard_policy_rejected": false,
+        "decision": "select",
+        "reasons": [
+          "The source is highly relevant and authoritative, but the request asks for a final evaluation, not a rejection. The source meets the criteria for a high-quality, authoritative overview of cultural heritage, which is a core part of the research topic. The initial 'rejection' in the thought process was a placeholder error; the source should be accepted as highly valuable.",
+          "Meets the request-specific relevance and policy score threshold."
+        ],
+        "preview_success": true,
+        "profile_provider": null,
+        "profile_verification_checks": {},
+        "profile_verification_attempts": [],
+        "topic_purpose_confidence": null,
+        "duplicate_of": null
+      },
+      "candidate_id": "cand_3",
+      "reranker_score": 0.5112,
+      "url": "https://erdem.gov.tr/tam-metin/32/tur",
+      "search_query": "Türkiye'nin tarihi, kültürel mirası ve edebi geleneği hakkında akademik kaynaklar",
+      "user_supplied_reference": false,
+      "source_provider": "firecrawl",
+      "priority": 2,
+      "reason": "Selected from eligible sources by request-specific quality score.; Adds a useful source-domain diversity contribution.; Adds a useful source-type diversity contribution.",
+      "selection": {
+        "url": "https://erdem.gov.tr/tam-metin/32/tur",
+        "rank": 2,
+        "selection_score": 0.823158,
+        "final_score": 0.86,
+        "domain": "erdem.gov.tr",
+        "source_type": "government",
+        "selection_reasons": [
+          "Selected from eligible sources by request-specific quality score.",
+          "Adds a useful source-domain diversity contribution.",
+          "Adds a useful source-type diversity contribution."
+        ]
+      }
+    }
+  ],
+  "rejected_sources": [
+    {
+      "url": "https://dergipark.org.tr/tr/download/article-file/3963587",
+      "selected": false,
+      "reason": "Source preview failed; skipped model-based source characterization.; Source preview was unavailable; content-based evaluation is not verified. Error: AttributeError: 'NoneType' object has no attribute 'split'"
+    },
+    {
+      "url": "https://iletisimvesanat.com/files/iletisimvesanat/d49c26f2-50ce-4d20-914e-3251b59c399a.pdf",
+      "selected": false,
+      "reason": "The preview indicates a 404 error ('404 Sayfa Bulunamadı'), meaning the specific PDF content is not accessible.; Although the metadata title and description suggest high topical relevance to traditional Turkish music and cultural values, the actual content is missing.; The source is from an academic journal domain ('iletisimvesanat.com'), which aligns with the preference for academic publications, but the lack of accessible content prevents verification of authority or extractability.; No usable text evidence is available to assess information density or technical depth.; Does not meet the request-specific relevance and policy score threshold."
+    }
+  ],
+  "explored_site_starts": [],
+  "site_exploration_results": [],
+  "schema_design_input": {},
+  "draft_dataset_schema": {},
+  "approved_dataset_schema": {},
+  "acquired_documents": [],
+  "acquisition_metrics": {},
+  "scraped_documents": [],
+  "processed_documents": [],
+  "content_processing_metrics": {},
+  "clean_documents": [],
+  "document_chunks": [],
+  "extraction_routes": [],
+  "deterministic_extraction_results": [],
+  "deterministic_extraction_batches": [],
+  "extraction_routing_metrics": {},
+  "extraction_batches": [],
+  "evidenced_extraction_batches": [],
+  "evidence_metrics": {},
+  "evidence_warnings": [],
+  "evidence_rejections": [],
+  "verified_records": [],
+  "evidence_validation_metrics": {},
+  "quality_approved_extraction_batches": [],
+  "record_quality_assessments": [],
+  "quality_gate_metrics": {},
+  "quality_gate_rejections": [],
+  "resolved_records": [],
+  "record_resolution_metrics": {},
+  "extraction_warnings": [],
+  "chunk_extraction_results": [],
+  "merged_records": [],
+  "extraction_results": [],
+  "accepted_records": [],
+  "rejected_records": [],
+  "raw_data": [],
+  "processed_data": [],
+  "classified_data": [],
+  "enriched_data": [],
+  "validated_data": [],
+  "validation_report": {},
+  "deduplication_metrics": {},
+  "output_profiles": [],
+  "output_paths": {},
+  "run_metrics": {},
+  "run_manifest": {},
+  "storage_metrics": {},
+  "coverage_metrics": {},
+  "coverage_states": [],
+  "research_tasks": [],
+  "enrichment_queries": [],
+  "enrichment_metrics": {},
+  "enrichment_round": 0,
+  "manifest_path": "",
+  "checkpoint_stage": "sources",
+  "checkpoint_path": "knowledge\\datasets\\my_d_checkpoint.json",
+  "checkpoint_history": [],
+  "resume_from": "",
+  "errors": [],
+  "status": "sources_selected",
+  "pipeline_status": "sources_selected"
+}

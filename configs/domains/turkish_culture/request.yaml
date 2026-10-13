@@ -5,8 +5,8 @@ dataset:
   profile: structured
 
 research:
-  queries: 10
-  max_sources: 10
+  queries: 2
+  max_sources: 2
   constraints: |
     The sources must be authoritative and reliable, such as government websites, academic publications, and reputable news outlets.
 
